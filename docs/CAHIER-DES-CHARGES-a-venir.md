@@ -29,10 +29,15 @@ posé au chantier 1 — aucune nouvelle table de métadonnées.
 
 ## Règle d'ajout à la wishlist (Découvrir)
 
-- Un second bouton apparaît sur chaque résultat de recherche, **à côté du bouton d'ajout à la
-  bibliothèque existant**, mais uniquement si le jeu n'est **pas encore sorti** (date de sortie
-  future OU absente/TBD). Un jeu déjà sorti ne peut pas être mis en wishlist : la notion ne
-  s'applique qu'à « ce qui va sortir ».
+> **Amendement (retour utilisateur, 2026-07-30)** : le bouton wishlist et le bouton d'ajout à la
+> bibliothèque sont finalement **mutuellement exclusifs** plutôt que côte à côte — un jeu pas
+> encore sorti ne propose que la wishlist, un jeu sorti ne propose que la bibliothèque. Voir le
+> journal des livraisons dans CONTEXTE.md pour le détail.
+
+- Un bouton wishlist apparaît sur chaque résultat de recherche **à la place du** bouton d'ajout
+  à la bibliothèque, uniquement si le jeu n'est **pas encore sorti** (date de sortie future OU
+  absente/TBD). Un jeu déjà sorti ne peut pas être mis en wishlist : la notion ne s'applique
+  qu'à « ce qui va sortir », et ne peut alors qu'être ajouté à la bibliothèque.
 - Si le jeu est déjà dans la wishlist : le bouton wishlist est remplacé par un badge « Dans ta
   wishlist » (même logique que « Déjà ajouté » pour la bibliothèque), cliquable vers la Fiche
   jeu.

@@ -8,7 +8,7 @@ import Cover from "../components/Cover.jsx";
 import Countdown from "../components/Countdown.jsx";
 import { RefreshIcon } from "../components/icons.jsx";
 
-export default function Avenir({ onOpenGame }) {
+export default function Avenir({ onOpenGame, onNavigate }) {
   const [items, setItems] = useState(null); // [{ entry, game }]
   const [confirmingId, setConfirmingId] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -66,10 +66,14 @@ export default function Avenir({ onOpenGame }) {
       )}
 
       {items && items.length === 0 && (
-        <p className="px-4 text-sm text-faint">
-          Ta wishlist est vide — repère des jeux pas encore sortis dans Découvrir pour les
-          suivre ici.
-        </p>
+        <div className="px-4">
+          <p className="text-sm text-faint">
+            Ta wishlist est vide — repère des jeux pas encore sortis pour les suivre ici.
+          </p>
+          <button className="btn-primary mt-3 px-4 py-2 text-sm" onClick={() => onNavigate("decouvrir")}>
+            Découvrir des jeux
+          </button>
+        </div>
       )}
 
       {groups &&

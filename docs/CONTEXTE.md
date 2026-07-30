@@ -14,13 +14,18 @@ cochées le 2026-07-30 : [CAHIER-DES-CHARGES-bibliotheque.md](CAHIER-DES-CHARGES
 [CAHIER-DES-CHARGES-a-venir.md](CAHIER-DES-CHARGES-a-venir.md),
 [CAHIER-DES-CHARGES-profil.md](CAHIER-DES-CHARGES-profil.md)) :
 
-- **Découvrir** : recherche live sur IGDB (debounce 300 ms), résultats avec cover/plateformes.
-  Deux actions par résultat : ajout à la **bibliothèque** (statut + note /10 + commentaire, via
-  une Sheet) et, si le jeu n'est pas encore sorti, ajout à la **wishlist** (un tap, sans
-  formulaire). Un jeu déjà présent dans l'une ou l'autre affiche un badge à la place du bouton
-  (pas de doublon possible).
+- **Découvrir** : recherche live sur IGDB (debounce 300 ms, spinner pendant le chargement),
+  résultats avec cover/plateformes. Chaque résultat est cliquable et ouvre sa Fiche jeu ; l'ajout
+  reste possible sans y entrer. Un seul bouton d'action par résultat, **mutuellement exclusif**
+  selon la sortie du jeu : pas encore sorti → ajout à la **wishlist** (un tap, sans formulaire) ;
+  déjà sorti → ajout à la **bibliothèque** (statut + note /10 + commentaire, via une Sheet). Un
+  jeu déjà présent dans l'une ou l'autre affiche un badge à la place du bouton (pas de doublon
+  possible). La recherche reste affichée si on ouvre une fiche puis revient en arrière (l'écran
+  actif ne se démonte pas quand une Fiche jeu s'ouvre par-dessus).
 - **Bibliothèque** : vue Grille par défaut (bascule Liste disponible), filtre par statut
-  (Tous/Backlog/En cours/Terminé/Abandonné), état vide avec message d'invitation.
+  (Tous/**À faire**/En cours/Terminé/Abandonné — « À faire » est le libellé affiché, la clé
+  interne reste `backlog`), état vide avec message d'invitation et bouton "Ajouter un jeu" vers
+  Découvrir (même bouton sur l'état vide d'À venir).
 - **À venir** : wishlist groupée par échéance (Sorti / Aujourd'hui / Cette semaine / Ce mois-ci
   / Plus tard, calculée en jours glissants), countdown adapté (jours si ≤60j, mois/année
   au-delà, « Date TBD » sinon), indicateur de fraîcheur + bouton Actualiser (force le
@@ -140,3 +145,35 @@ ont été explicitement écartés du chantier Profil (voir son cahier des charge
 - **Périmètre MVP initial entièrement construit.** Prochaine étape à décider avec
   l'utilisateur : recette globale de bout en bout, durcissement (hors-ligne, gros volumes),
   ou début du périmètre V2 (social).
+
+### Livraison 4 — Retours de test manuel, lot de retouches (2026-07-30)
+Suite au premier test manuel complet de l'utilisateur, retouches livrées sans nouveau cahier
+des charges (corrections/ajustements UX contenus, sans impact sur le modèle de données) :
+- Libellé du statut `backlog` renommé « À faire » (clé interne inchangée, pas de migration).
+- Bug visuel corrigé : bouton `+` non centré dans son cercle (Découvrir).
+- États vides de Bibliothèque et À venir : bouton « Ajouter un jeu » / « Découvrir des jeux »
+  vers Découvrir (nouveau callback `onNavigate` sur `App.jsx`).
+- Spinner pendant le chargement d'une recherche dans Découvrir.
+- `App.jsx` restructuré : l'écran actif reste monté quand une Fiche jeu s'ouvre par-dessus (au
+  lieu d'être démonté et remplacé), pour que Découvrir conserve sa recherche au retour arrière.
+- Un résultat de recherche est maintenant cliquable dans son ensemble (ouvre la Fiche jeu) ; le
+  bouton d'action reste indépendamment cliquable (`stopPropagation`).
+- Recherche : bouton wishlist et bouton bibliothèque sont maintenant mutuellement exclusifs
+  selon que le jeu soit sorti ou non (amendement documenté dans
+  [CAHIER-DES-CHARGES-a-venir.md](CAHIER-DES-CHARGES-a-venir.md)).
+- Vérifié en conditions réelles avec les données déjà présentes dans l'app (pas de jeu de test
+  ajouté/retiré pour ne pas perturber les données de l'utilisateur) ; l'état vide a été vérifié
+  via un filtre de statut sans résultat plutôt qu'en vidant la bibliothèque.
+
+**Retours reçus mais volontairement pas encore traités**, en attente de cadrage produit avec
+l'utilisateur avant tout code (voir prochaine conversation) :
+- Onboarding première visite avec suggestions de jeux connus, et recommandations dans Découvrir
+  basées sur l'historique — nécessitent une nouvelle capacité côté proxy (liste de jeux
+  populaires/tendances), pas encore conçue.
+- Distinction possession/wishlist dans « À faire », sélection des plateformes possédées et de
+  la plateforme de complétion, rejouer un jeu terminé (compteur d'itérations) — modifient tous
+  le modèle `LibraryEntry` posé aux chantiers 1-2 ; l'utilisateur a explicitement formulé le
+  premier point comme une question ouverte, pas une décision arrêtée.
+- Glissement gauche/droite entre les filtres de statut sur mobile (À faire/En cours/Terminé/
+  Abandonné) — pas de dépendance au modèle de données, mais pas encore fait.
+- Temps de jeu par jeu — explicitement noté par l'utilisateur comme un sujet V2.

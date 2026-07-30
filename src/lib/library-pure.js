@@ -4,7 +4,7 @@
 export const STATUSES = ["backlog", "en_cours", "termine", "abandonne"];
 
 export const STATUS_LABELS = {
-  backlog: "Backlog",
+  backlog: "À faire",
   en_cours: "En cours",
   termine: "Terminé",
   abandonne: "Abandonné",

@@ -58,7 +58,7 @@ export default function Decouvrir({ onOpenGame }) {
     <>
       <PageHeader title="Découvrir" />
 
-      <div className="mb-4 px-4">
+      <div className="mb-2 px-4">
         <input
           className="field"
           placeholder="Chercher un jeu…"
@@ -66,6 +66,13 @@ export default function Decouvrir({ onOpenGame }) {
           onChange={(e) => setTerm(e.target.value)}
         />
       </div>
+
+      {loading && (
+        <div className="mb-2 flex items-center gap-2 px-4 text-xs text-faint">
+          <span className="spinner" aria-hidden="true" />
+          Recherche…
+        </div>
+      )}
 
       {error && <p className="mx-4 mb-3 text-sm text-negative">{error}</p>}
       {!error && !loading && trimmedTerm && results.length === 0 && (
@@ -75,9 +82,13 @@ export default function Decouvrir({ onOpenGame }) {
       <ul className="flex flex-col gap-2 px-4">
         {results.map((game) => {
           const { inLibrary, inWishlist } = presence[game.igdbId] || {};
-          const canWishlist = !inLibrary && isUnreleased(game.releaseDate);
+          const unreleased = isUnreleased(game.releaseDate);
           return (
-            <li key={game.igdbId} className="glass flex items-center gap-3 rounded-3xl p-3">
+            <li
+              key={game.igdbId}
+              className="glass glass-interactive flex cursor-pointer items-center gap-3 rounded-3xl p-3"
+              onClick={() => onOpenGame(game.igdbId)}
+            >
               <Cover title={game.title} coverUrl={game.coverUrl} className="h-12 w-12" />
               <div className="min-w-0 flex-1">
                 <h3 className="truncate text-sm font-semibold">{game.title}</h3>
@@ -88,11 +99,25 @@ export default function Decouvrir({ onOpenGame }) {
                 </div>
               </div>
 
-              <div className="flex flex-shrink-0 items-center gap-1.5">
+              <div className="flex flex-shrink-0 items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                 {inLibrary ? (
                   <button className="btn-glass px-3 py-1.5 text-xs" onClick={() => onOpenGame(game.igdbId)}>
                     Déjà ajouté
                   </button>
+                ) : unreleased ? (
+                  inWishlist ? (
+                    <button className="btn-glass px-3 py-1.5 text-xs" onClick={() => onOpenGame(game.igdbId)}>
+                      Dans ta wishlist
+                    </button>
+                  ) : (
+                    <button
+                      className="icon-btn"
+                      aria-label={`Ajouter ${game.title} à ma wishlist`}
+                      onClick={() => handleAddToWishlist(game)}
+                    >
+                      <BookmarkIcon />
+                    </button>
+                  )
                 ) : (
                   <button
                     className="add-btn"
@@ -100,24 +125,6 @@ export default function Decouvrir({ onOpenGame }) {
                     onClick={() => setAddingGame(game)}
                   >
                     +
-                  </button>
-                )}
-
-                {!inLibrary && inWishlist && (
-                  <button
-                    className="btn-glass px-3 py-1.5 text-xs"
-                    onClick={() => onOpenGame(game.igdbId)}
-                  >
-                    Dans ta wishlist
-                  </button>
-                )}
-                {!inLibrary && !inWishlist && canWishlist && (
-                  <button
-                    className="icon-btn"
-                    aria-label={`Ajouter ${game.title} à ma wishlist`}
-                    onClick={() => handleAddToWishlist(game)}
-                  >
-                    <BookmarkIcon />
                   </button>
                 )}
               </div>

@@ -11,7 +11,7 @@ import { ListIcon, GridIcon } from "../components/icons.jsx";
 const FILTERS = ["tous", ...STATUSES];
 const FILTER_LABELS = { tous: "Tous", ...STATUS_LABELS };
 
-export default function Bibliotheque({ onOpenGame }) {
+export default function Bibliotheque({ onOpenGame, onNavigate }) {
   const [view, setView] = useState("grille");
   const [filter, setFilter] = useState("tous");
   const [items, setItems] = useState(null);
@@ -64,9 +64,12 @@ export default function Bibliotheque({ onOpenGame }) {
       </div>
 
       {items && items.length === 0 && (
-        <p className="px-4 text-sm text-faint">
-          Ta bibliothèque est vide pour l'instant — va dans Découvrir pour ajouter un premier jeu.
-        </p>
+        <div className="px-4">
+          <p className="text-sm text-faint">Ta bibliothèque est vide pour l'instant.</p>
+          <button className="btn-primary mt-3 px-4 py-2 text-sm" onClick={() => onNavigate("decouvrir")}>
+            Ajouter un jeu
+          </button>
+        </div>
       )}
 
       {items && items.length > 0 && view === "grille" && (

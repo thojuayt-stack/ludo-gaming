@@ -283,6 +283,8 @@ textarea.field { resize: vertical; }
 .icon-btn[data-active="true"] { color: var(--foreground); background: var(--glass-bg-strong); }
 
 .add-btn {
+  display: grid;
+  place-items: center;
   width: 2.1rem;
   height: 2.1rem;
   border-radius: 9999px;
@@ -292,6 +294,21 @@ textarea.field { resize: vertical; }
   font-size: 1.1rem;
   line-height: 1;
   flex-shrink: 0;
+}
+
+.spinner {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid var(--glass-border);
+  border-top-color: var(--accent);
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .spinner { animation: spin 0.7s linear infinite; }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .section-label {
