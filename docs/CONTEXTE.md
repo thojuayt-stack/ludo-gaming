@@ -9,19 +9,31 @@ finit par coder d'après une description qui ne correspond plus à rien.
 
 ## ⭐ CE QUE FAIT L'APP AUJOURD'HUI
 
-Rien n'est encore codé. Le dépôt contient le cadrage (rôles, stack, design system), une
-maquette HTML validée des 4 écrans principaux, et le cahier des charges du premier chantier
-(Bibliothèque + Découvrir/recherche + Fiche jeu — voir
-[CAHIER-DES-CHARGES-bibliotheque.md](CAHIER-DES-CHARGES-bibliotheque.md)), prêt à être codé.
+Le chantier 1 est codé et vérifié en conditions réelles (recette du cahier des charges cochée
+le 2026-07-30, voir [CAHIER-DES-CHARGES-bibliotheque.md](CAHIER-DES-CHARGES-bibliotheque.md)) :
 
-**Périmètre MVP décidé** (pas encore construit) :
-- Une **bibliothèque personnelle** de jeux avec 4 statuts : backlog / en cours / terminé /
-  abandonné, note et commentaire par jeu.
-- Une **wishlist « À venir »** : jeux pas encore sortis, groupés par échéance (Aujourd'hui /
-  Cette semaine / Plus tard), dates tenues à jour via IGDB.
-- Un onglet **Découvrir** : recherche live sur IGDB, ajout à la bibliothèque ou à la wishlist.
-- Un onglet **Profil** : statistiques basiques, thème clair/sombre, export JSON des données
-  locales.
+- **Découvrir** : recherche live sur IGDB (debounce 300 ms), résultats avec cover/plateformes,
+  bouton d'ajout à la bibliothèque (statut + note optionnelle /10 + commentaire) via une Sheet.
+  Un jeu déjà présent affiche « Déjà ajouté » à la place du bouton (pas de doublon possible).
+- **Bibliothèque** : vue Grille par défaut (bascule Liste disponible), filtre par statut
+  (Tous/Backlog/En cours/Terminé/Abandonné), état vide avec message d'invitation.
+- **Fiche jeu** : infos IGDB (plateformes, genres, date de sortie ou « Date TBD », synopsis),
+  bloc « Mon suivi » éditable (statut, note, commentaire, sauvegarde automatique), suppression
+  avec confirmation.
+- Toutes les données personnelles (statut/note/commentaire) sont en IndexedDB local, persistent
+  après rechargement complet de la page. Le catalogue IGDB passe uniquement par le proxy
+  serverless `api/igdb/*` (liste blanche stricte) — confirmé sans clé/token visible côté
+  navigateur.
+- **À venir** et **Profil** sont des écrans placeholder (« Bientôt disponible ») — hors périmètre
+  du chantier 1, prévus pour les chantiers suivants.
+
+**Comment lancer l'app en local** : `npm run dev` (Vite, port 5173) **et**, dans un autre
+terminal, `vercel dev --listen 3000` (proxy IGDB, nécessite `.env.local` avec
+`TWITCH_CLIENT_ID`/`TWITCH_CLIENT_SECRET` — voir la section Twitch du cahier des charges).
+
+**Périmètre MVP restant à construire** :
+- La **wishlist « À venir »** groupée par échéance (Aujourd'hui / Cette semaine / Plus tard).
+- L'onglet **Profil** : statistiques, thème clair/sombre, export JSON.
 - **Aucun compte, aucune base en ligne, aucun social** pour le MVP (prévu V2).
 
 ## Décisions figées
@@ -50,3 +62,27 @@ maquette HTML validée des 4 écrans principaux, et le cahier des charges du pre
 - Prochaine étape : coder le chantier 1 (scaffolding Vite/React/Tailwind + proxy IGDB +
   IndexedDB + les 3 écrans du cahier des charges), puis en apporter la preuve (capture d'écran
   + recette cochée).
+
+### Livraison 1 — Chantier Bibliothèque + Découvrir + Fiche jeu (2026-07-30)
+- Scaffolding Vite + React 19 + Tailwind v4, design system porté dans
+  `src/styles/globals.css` (palette indigo/ambre validée).
+- Couche données : `src/lib/db.js` (IndexedDB via idb-keyval, 2 bases séparées
+  métadonnées/perso), `src/lib/library-pure.js` (logique pure, testée par
+  `src/lib/library-pure.test.js` — 10 tests, `npm test`, sans réseau), `src/lib/library.js`
+  (CRUD), `src/lib/igdb.js` (client + cache TTL).
+- Proxy serverless `api/igdb/search.js` + `api/igdb/game.js` (liste blanche stricte, échange
+  OAuth Twitch côté serveur uniquement).
+- Écrans `src/screens/Decouvrir.jsx`, `Bibliotheque.jsx`, `FicheJeu.jsx` + placeholders
+  `Avenir.jsx`/`Profil.jsx`, composants partagés (`Cover`, `Stars`, `StatusPill`, `Sheet`,
+  `AjouterSheet`, `PageHeader`, `BottomNav`).
+- Identifiants Twitch/IGDB créés par l'utilisateur (guidé pas à pas), stockés dans
+  `.env.local` (gitignored). Projet Vercel `optimumstack/ludotheque` lié pour faire tourner
+  `vercel dev` en local (aucun déploiement en ligne effectué).
+- Recette du cahier des charges entièrement vérifiée en conditions réelles (voir le fichier
+  du cahier des charges pour le détail) : recherche IGDB réelle, ajout/anti-doublon,
+  persistance après reload, filtre par statut, suppression avec confirmation, aucune fuite de
+  clé côté navigateur.
+- Non couvert : comportement hors-ligne après expiration du cache, gros volumes de
+  bibliothèque (voir cahier des charges, section recette).
+- Prochaine étape : chantier 2 (À venir — wishlist groupée par échéance) ou chantier 3
+  (Profil — stats, thème, export), à trancher avec l'utilisateur.

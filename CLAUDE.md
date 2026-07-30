@@ -41,6 +41,20 @@ tenue à jour via un catalogue externe (IGDB).
 `backlog` / `en cours` / `terminé` / `abandonné` — équivalent jeu vidéo des statuts
 « à voir / vu / archivé » d'un tracker séries.
 
+## Commandes
+
+- `npm install` puis `npm run dev` — front Vite sur http://localhost:5173.
+- `vercel dev --listen 3000` (dans un second terminal) — proxy IGDB (`api/`) sur le port 3000 ;
+  Vite proxy `/api/*` vers ce port (voir `vite.config.js`). Nécessite un `.env.local` avec
+  `TWITCH_CLIENT_ID` et `TWITCH_CLIENT_SECRET` (gitignored, jamais commités — voir la section
+  Twitch du cahier des charges du chantier 1 pour les obtenir). Sans ce second terminal,
+  l'app tourne mais Découvrir affiche l'erreur réseau prévue (cas limite géré, pas un bug).
+- `npm test` — bancs d'essai Node natifs (`node --test`) sur la logique pure de `src/lib/`,
+  sans réseau ni dépendance.
+- Ce projet nécessite Node 22 (voir `.nvmrc`) — Vite 8 ne tourne pas sous Node 16/18.
+- Projet Vercel lié : `optimumstack/ludotheque` (uniquement pour faire tourner `vercel dev`
+  en local ; aucun déploiement en ligne n'a été fait à ce stade).
+
 ## Structure du dépôt
 
 - `src/` — app React (pages, composants)

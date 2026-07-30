@@ -125,13 +125,24 @@ consultation — pas de rafraîchissement en tâche de fond pour ce chantier.
 
 ## Recette (à cocher à la fin du chantier)
 
-- [ ] Chercher un jeu existant dans Découvrir affiche de vrais résultats IGDB (pas de mock)
-- [ ] Ajouter un jeu avec un statut initial le fait apparaître dans Bibliothèque sans recharger
-- [ ] Changer statut / note / commentaire depuis la Fiche jeu résiste à un rechargement complet
-      de la page (persistance IndexedDB réelle, pas juste en mémoire)
-- [ ] Le filtre par statut dans Bibliothèque n'affiche que les jeux du bon statut
-- [ ] Bibliothèque vide affiche le message d'invitation, jamais une erreur
-- [ ] Un jeu déjà en bibliothèque ne peut pas être ajouté en double depuis Découvrir
-- [ ] Onglet réseau du navigateur : aucune clé ni token Twitch/IGDB visible dans les requêtes
-      sortant du navigateur (tout part vers `/api/igdb/*`, jamais vers `api.igdb.com` direct)
-- [ ] Retirer un jeu de la bibliothèque demande confirmation avant suppression
+Vérifiée en conditions réelles (Twitch/IGDB connectés, pas de mock) le 2026-07-30 :
+
+- [x] Chercher un jeu existant dans Découvrir affiche de vrais résultats IGDB (pas de mock) —
+      testé avec « hades » et « zelda », covers et métadonnées réelles reçues.
+- [x] Ajouter un jeu avec un statut initial le fait apparaître dans Bibliothèque sans recharger
+- [x] Changer statut / note / commentaire depuis la Fiche jeu résiste à un rechargement complet
+      de la page (persistance IndexedDB réelle, pas juste en mémoire) — vérifié en rechargeant
+      après avoir changé le statut de Hades de Terminé à En cours.
+- [x] Le filtre par statut dans Bibliothèque n'affiche que les jeux du bon statut
+- [x] Bibliothèque vide affiche le message d'invitation, jamais une erreur
+- [x] Un jeu déjà en bibliothèque ne peut pas être ajouté en double depuis Découvrir — le bouton
+      « + » devient « Déjà ajouté ».
+- [x] Onglet réseau du navigateur : aucune clé ni token Twitch/IGDB visible dans les requêtes
+      sortant du navigateur (tout part vers `/api/igdb/*`, jamais vers `api.igdb.com` direct) —
+      confirmé via l'inspection réseau ET du corps de réponse (aucune occurrence de
+      token/secret/client_id).
+- [x] Retirer un jeu de la bibliothèque demande confirmation avant suppression
+
+Non couvert par cette recette (comportement attendu mais non testé faute de scénario) :
+absence de connexion réseau après un premier chargement (cache TTL expiré + offline complet) ;
+volumes de bibliothèque importants (>100 jeux).
