@@ -1,6 +1,8 @@
 // Logique pure de la bibliothèque : aucun accès à IndexedDB ni au DOM ici,
 // pour rester testable sans réseau ni navigateur (voir library-pure.test.js).
 
+import { isUnreleased, byReleaseDateAscThenTitle } from "./wishlist-pure.js";
+
 export const STATUSES = ["backlog", "en_cours", "termine", "abandonne"];
 
 export const STATUS_LABELS = {
@@ -48,6 +50,26 @@ export function completionLabel(playCount) {
 /** On ne peut pas posséder un jeu dont la date de sortie est future et connue. */
 export function isOwnershipLocked(releaseDate, now = Date.now()) {
   return releaseDate != null && releaseDate > now;
+}
+
+/**
+ * Répartit les items de l'onglet "À faire" entre jeux déjà disponibles et jeux pas encore
+ * sortis (même règle que la wishlist : date future connue OU absente = pas encore sorti).
+ * items : [{ entry, game }] -> { disponible, nonDisponible }, nonDisponible trié par date de
+ * sortie croissante (TBD en dernier, par titre).
+ */
+export function splitBacklogByAvailability(items, now = Date.now()) {
+  const disponible = [];
+  const nonDisponible = [];
+  for (const item of items) {
+    if (isUnreleased(item.game?.releaseDate ?? null, now)) {
+      nonDisponible.push(item);
+    } else {
+      disponible.push(item);
+    }
+  }
+  nonDisponible.sort(byReleaseDateAscThenTitle);
+  return { disponible, nonDisponible };
 }
 
 // Mêmes paires de dégradés que la maquette validée (mockups/ecrans-principaux.html),

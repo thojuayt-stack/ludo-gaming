@@ -11,6 +11,7 @@ import {
   nextPlayCount,
   completionLabel,
   isOwnershipLocked,
+  splitBacklogByAvailability,
 } from "./library-pure.js";
 
 test("ratingToStars renvoie null si aucune note", () => {
@@ -110,4 +111,25 @@ test("isOwnershipLocked est vrai seulement pour une date de sortie future connue
   assert.equal(isOwnershipLocked(null, now), false); // TBD : éditable
   assert.equal(isOwnershipLocked(now - 1000, now), false); // déjà sorti : éditable
   assert.equal(isOwnershipLocked(now + 1000, now), true); // futur connu : verrouillé
+});
+
+test("splitBacklogByAvailability sépare sorti / pas encore sorti", () => {
+  const now = Date.now();
+  const items = [
+    { entry: { igdbId: 1 }, game: { title: "Sorti", releaseDate: now - 1000 } },
+    { entry: { igdbId: 2 }, game: { title: "TBD", releaseDate: null } },
+    { entry: { igdbId: 3 }, game: { title: "Futur proche", releaseDate: now + 2 * 86_400_000 } },
+    { entry: { igdbId: 4 }, game: { title: "Futur lointain", releaseDate: now + 10 * 86_400_000 } },
+  ];
+  const { disponible, nonDisponible } = splitBacklogByAvailability(items, now);
+  assert.deepEqual(disponible.map((i) => i.game.title), ["Sorti"]);
+  // Trié par date de sortie croissante, TBD en dernier (par titre)
+  assert.deepEqual(nonDisponible.map((i) => i.game.title), ["Futur proche", "Futur lointain", "TBD"]);
+});
+
+test("splitBacklogByAvailability gère un item sans game (fiche pas encore chargée)", () => {
+  const items = [{ entry: { igdbId: 1 }, game: null }];
+  const { disponible, nonDisponible } = splitBacklogByAvailability(items);
+  assert.equal(disponible.length, 0);
+  assert.equal(nonDisponible.length, 1); // pas de date connue -> traité comme pas encore sorti
 });

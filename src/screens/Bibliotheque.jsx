@@ -1,17 +1,111 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { listLibraryEntries } from "../lib/library.js";
-import { STATUSES, STATUS_LABELS } from "../lib/library-pure.js";
+import { STATUSES, STATUS_LABELS, splitBacklogByAvailability } from "../lib/library-pure.js";
+import { daysUntil } from "../lib/wishlist-pure.js";
 import { getGame } from "../lib/igdb.js";
 import PageHeader from "../components/PageHeader.jsx";
 import Cover from "../components/Cover.jsx";
 import StatusPill from "../components/StatusPill.jsx";
 import Stars from "../components/Stars.jsx";
+import Countdown from "../components/Countdown.jsx";
 import { ListIcon, GridIcon } from "../components/icons.jsx";
 
 const FILTERS = ["tous", ...STATUSES];
 const FILTER_LABELS = { tous: "Tous", ...STATUS_LABELS };
 
 const SWIPE_MIN_DISTANCE = 60;
+
+function GameGridTile({ entry, game, onOpen, showCountdown }) {
+  return (
+    <figure className="relative isolate m-0 cursor-pointer" onClick={() => onOpen(entry.igdbId)}>
+      {showCountdown ? (
+        <span className="countdown-badge">
+          <Countdown days={daysUntil(game?.releaseDate ?? null)} releaseDate={game?.releaseDate} />
+        </span>
+      ) : (
+        <span className={`pill pill-${entry.status} absolute left-1.5 top-1.5 z-10`}>
+          {entry.possede ? STATUS_LABELS[entry.status] : "Non possédé"}
+        </span>
+      )}
+      <Cover title={game?.title} coverUrl={game?.coverUrl} className="aspect-[3/4] w-full" />
+      <figcaption className="mt-1.5 text-xs font-semibold leading-tight">{game?.title}</figcaption>
+    </figure>
+  );
+}
+
+function GameListRow({ entry, game, onOpen, showCountdown }) {
+  return (
+    <li
+      className="glass glass-interactive flex cursor-pointer items-center gap-3 rounded-3xl p-3"
+      onClick={() => onOpen(entry.igdbId)}
+    >
+      <Cover title={game?.title} coverUrl={game?.coverUrl} className="h-14 w-14" />
+      <div className="min-w-0 flex-1">
+        <h3 className="truncate text-sm font-semibold">{game?.title}</h3>
+        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+          {game?.platforms?.[0] && <span className="plat">{game.platforms[0]}</span>}
+          {!showCountdown && (
+            <>
+              <StatusPill status={entry.status} possede={entry.possede} />
+              <Stars rating={entry.rating} />
+            </>
+          )}
+        </div>
+      </div>
+      {showCountdown && (
+        <Countdown days={daysUntil(game?.releaseDate ?? null)} releaseDate={game?.releaseDate} />
+      )}
+    </li>
+  );
+}
+
+function GameGrid({ items, onOpenGame, showCountdown }) {
+  return (
+    <div className="grid grid-cols-3 gap-2.5 px-4">
+      {items.map(({ entry, game }) => (
+        <GameGridTile key={entry.igdbId} entry={entry} game={game} onOpen={onOpenGame} showCountdown={showCountdown} />
+      ))}
+    </div>
+  );
+}
+
+function GameList({ items, onOpenGame, showCountdown }) {
+  return (
+    <ul className="flex flex-col gap-2 px-4">
+      {items.map(({ entry, game }) => (
+        <GameListRow key={entry.igdbId} entry={entry} game={game} onOpen={onOpenGame} showCountdown={showCountdown} />
+      ))}
+    </ul>
+  );
+}
+
+function BacklogSections({ items, view, onOpenGame }) {
+  const { disponible, nonDisponible } = splitBacklogByAvailability(items);
+  return (
+    <>
+      {disponible.length > 0 && (
+        <>
+          <p className="section-label">Disponible</p>
+          {view === "grille" ? (
+            <GameGrid items={disponible} onOpenGame={onOpenGame} />
+          ) : (
+            <GameList items={disponible} onOpenGame={onOpenGame} />
+          )}
+        </>
+      )}
+      {nonDisponible.length > 0 && (
+        <>
+          <p className="section-label">Non disponible</p>
+          {view === "grille" ? (
+            <GameGrid items={nonDisponible} onOpenGame={onOpenGame} showCountdown />
+          ) : (
+            <GameList items={nonDisponible} onOpenGame={onOpenGame} showCountdown />
+          )}
+        </>
+      )}
+    </>
+  );
+}
 
 export default function Bibliotheque({ onOpenGame, onNavigate }) {
   const [view, setView] = useState("grille");
@@ -96,44 +190,16 @@ export default function Bibliotheque({ onOpenGame, onNavigate }) {
           </div>
         )}
 
-        {items && items.length > 0 && view === "grille" && (
-          <div className="grid grid-cols-3 gap-2.5 px-4">
-            {items.map(({ entry, game }) => (
-              <figure
-                key={entry.igdbId}
-                className="relative isolate m-0 cursor-pointer"
-                onClick={() => onOpenGame(entry.igdbId)}
-              >
-                <span className={`pill pill-${entry.status} absolute left-1.5 top-1.5 z-10`}>
-                  {entry.possede ? STATUS_LABELS[entry.status] : "Pas possédé"}
-                </span>
-                <Cover title={game?.title} coverUrl={game?.coverUrl} className="aspect-[3/4] w-full" />
-                <figcaption className="mt-1.5 text-xs font-semibold leading-tight">{game?.title}</figcaption>
-              </figure>
-            ))}
-          </div>
+        {items && items.length > 0 && filter === "backlog" && (
+          <BacklogSections items={items} view={view} onOpenGame={onOpenGame} />
         )}
 
-        {items && items.length > 0 && view === "liste" && (
-          <ul className="flex flex-col gap-2 px-4">
-            {items.map(({ entry, game }) => (
-              <li
-                key={entry.igdbId}
-                className="glass glass-interactive flex cursor-pointer items-center gap-3 rounded-3xl p-3"
-                onClick={() => onOpenGame(entry.igdbId)}
-              >
-                <Cover title={game?.title} coverUrl={game?.coverUrl} className="h-14 w-14" />
-                <div className="min-w-0 flex-1">
-                  <h3 className="truncate text-sm font-semibold">{game?.title}</h3>
-                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                    {game?.platforms?.[0] && <span className="plat">{game.platforms[0]}</span>}
-                    <StatusPill status={entry.status} possede={entry.possede} />
-                    <Stars rating={entry.rating} />
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
+        {items && items.length > 0 && filter !== "backlog" && view === "grille" && (
+          <GameGrid items={items} onOpenGame={onOpenGame} />
+        )}
+
+        {items && items.length > 0 && filter !== "backlog" && view === "liste" && (
+          <GameList items={items} onOpenGame={onOpenGame} />
         )}
       </div>
     </>

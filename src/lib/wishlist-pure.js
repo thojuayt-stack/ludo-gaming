@@ -53,7 +53,7 @@ function byReleaseDateDesc(a, b) {
   return (releaseDateOf(b) ?? 0) - (releaseDateOf(a) ?? 0);
 }
 
-function byReleaseDateAscThenTitle(a, b) {
+export function byReleaseDateAscThenTitle(a, b) {
   const aDate = releaseDateOf(a);
   const bDate = releaseDateOf(b);
   if (aDate != null && bDate != null) return aDate - bDate;

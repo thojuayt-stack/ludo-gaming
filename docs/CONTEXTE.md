@@ -25,9 +25,12 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
 - **Bibliothèque** : vue Grille par défaut (bascule Liste disponible), filtre par statut
   (Tous/**À faire**/En cours/Terminé/Abandonné — « À faire » est le libellé affiché, la clé
   interne reste `backlog`), navigable aussi par glissement tactile gauche/droite entre les
-  filtres. Un jeu non possédé affiche « Pas possédé » à la place de son statut (toujours « À
-  faire » dans ce cas). État vide avec bouton "Ajouter un jeu" vers Découvrir (même bouton sur
-  l'état vide d'À venir).
+  filtres. Un jeu non possédé affiche « Non possédé » à la place de son statut (toujours « À
+  faire » dans ce cas). Sous l'onglet **À faire** uniquement, la liste est coupée en 2 sections —
+  **Disponible** (jeu sorti) / **Non disponible** (pas encore sorti, badge countdown à la place
+  de la pastille de statut, même formatage que À venir) ; les autres onglets restent une liste
+  plate. État vide avec bouton "Ajouter un jeu" vers Découvrir (même bouton sur l'état vide
+  d'À venir).
 - **À venir** : vue *filtrée* sur la Bibliothèque (jeux `possede = false` dont la date de
   sortie n'est pas encore passée), groupée par échéance (Sorti / Aujourd'hui / Cette semaine /
   Ce mois-ci / Plus tard, calculée en jours glissants), countdown adapté (jours si ≤60j,
@@ -248,3 +251,26 @@ des charges (corrections/ajustements UX contenus, sans impact sur le modèle de 
   (aucune donnée réelle perdue), plus des ajouts/retraits de test nettoyés après vérification.
 - **Non traité** (retours en attente d'une nouvelle capacité côté proxy, voir plus haut) :
   suggestions à l'onboarding et recommandations dans Découvrir basées sur l'historique.
+
+### Livraison 8 — Bibliothèque : sections Disponible / Non disponible dans « À faire » (2026-07-30)
+- Cahier des charges rédigé et validé :
+  [CAHIER-DES-CHARGES-bibliotheque-a-faire-sections.md](CAHIER-DES-CHARGES-bibliotheque-a-faire-sections.md),
+  maquette [mockups/bibliotheque-a-faire-sections.html](../mockups/bibliotheque-a-faire-sections.html).
+- `src/lib/wishlist-pure.js` : `byReleaseDateAscThenTitle` exportée (réutilisée telle quelle,
+  pas dupliquée). `src/lib/library-pure.js` : nouvelle fonction pure
+  `splitBacklogByAvailability(items, now)` (2 nouveaux tests, `npm test` → 46 tests, tous
+  verts).
+- `src/screens/Bibliotheque.jsx` : sous le filtre **À faire** uniquement, répartition en 2
+  sections **Disponible** / **Non disponible** (grille et liste) ; les jeux non disponibles
+  perdent leur pastille de statut (redondante — toujours « Non possédé ») au profit d'un badge
+  countdown (composant `Countdown` déjà existant de À venir, réhabillé en badge de tuile via la
+  nouvelle classe CSS `.countdown-badge`). Rendu des autres filtres extrait dans des composants
+  de module (`GameGrid`/`GameList`/`GameGridTile`/`GameListRow`) réutilisés à l'identique,
+  aucune duplication de JSX.
+- Vérifié en conditions réelles avec les données déjà présentes dans l'app : « Marvel's
+  Wolverine » (pas encore sorti) apparaît sous « Non disponible » avec un countdown de 47 jours,
+  en grille comme en liste ; la section « Disponible » (vide dans les données actuelles) ne
+  s'affiche pas ; l'onglet « Tous » reste une liste plate inchangée.
+- Non testé faute de données réelles disponibles au moment de la vérification : une section
+  « Disponible » non vide en même temps que « Non disponible » (un seul jeu à faire dans l'app
+  actuellement), le badge countdown au format mois/année ou « Date TBD » sur une vraie tuile.

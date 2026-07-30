@@ -340,6 +340,29 @@ button.plat[data-active="true"] {
 }
 .countdown .label { font-size: 0.78rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
 
+/* Countdown réhabillé en badge compact posé sur une jaquette de tuile grille (Bibliothèque). */
+.countdown-badge {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  z-index: 2;
+  border-radius: 0.6rem;
+  padding: 0.25rem 0.4rem;
+  background: color-mix(in srgb, var(--accent) 22%, rgba(0, 0, 0, 0.55));
+  backdrop-filter: blur(6px);
+}
+.countdown-badge .countdown { text-align: center; }
+.countdown-badge .d { font-size: 0.82rem; }
+.countdown-badge .u { color: rgba(255, 255, 255, 0.85); font-weight: 700; }
+.countdown-badge .label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 3.6rem;
+  white-space: normal;
+  text-align: center;
+}
+
 .refresh-btn {
   display: flex;
   align-items: center;
