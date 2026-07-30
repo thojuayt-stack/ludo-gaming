@@ -128,7 +128,7 @@ h1, h2, h3 { text-wrap: balance; }
   inset-inline: 0;
   bottom: 0;
   height: 7rem;
-  z-index: 5;
+  z-index: 25;
   pointer-events: none;
   background: linear-gradient(to top, var(--bg-base) 34%, transparent);
 }
@@ -382,7 +382,7 @@ nav.bottom-nav {
   border-radius: 9999px;
   display: flex;
   padding: 0.35rem;
-  z-index: 10;
+  z-index: 30;
 }
 nav.bottom-nav button {
   flex: 1;

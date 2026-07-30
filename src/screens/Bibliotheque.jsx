@@ -101,7 +101,7 @@ export default function Bibliotheque({ onOpenGame, onNavigate }) {
             {items.map(({ entry, game }) => (
               <figure
                 key={entry.igdbId}
-                className="relative m-0 cursor-pointer"
+                className="relative isolate m-0 cursor-pointer"
                 onClick={() => onOpenGame(entry.igdbId)}
               >
                 <span className={`pill pill-${entry.status} absolute left-1.5 top-1.5 z-10`}>

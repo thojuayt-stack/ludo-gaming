@@ -193,3 +193,22 @@ l'utilisateur avant tout code (voir prochaine conversation) :
   change bien de filtre, un petit mouvement ou un mouvement surtout vertical ne déclenche rien.
 - Prochaine étape : les 4 retours plus profonds ci-dessus restent à cadrer avec l'utilisateur
   avant tout code (recommandations/onboarding, distinction possession, plateformes, rejouer).
+
+### Livraison 6 — Correction d'un bug d'empilement visuel (2026-07-30)
+- **Bug signalé** (capture annotée) : en ouvrant une Fiche jeu depuis la grille Bibliothèque,
+  les pastilles de statut (« Terminé », « En cours ») des autres cartes de la grille restaient
+  visibles par-dessus la Fiche jeu.
+- **Cause racine** : dans `Bibliotheque.jsx`, la pastille de statut de chaque carte a un
+  `z-10` en position absolue ; sa carte (`<figure>`) n'établissait aucun contexte d'empilement
+  propre (`position: relative` seul n'en crée pas), donc ce `z-10` rivalisait directement avec
+  le `z-index` de l'overlay Fiche jeu ajouté à la livraison 4 (`z-[1]`, trop bas) dans le
+  contexte d'empilement racine de la page, et l'emportait.
+- **Correctif** : `isolate` (Tailwind, `isolation: isolate`) ajouté sur chaque `<figure>` de la
+  grille — son contenu ne peut plus s'échapper vers le reste de la page, quel que soit son
+  z-index interne. En renfort, l'échelle de z-index globale a été espacée pour éviter que ce
+  genre de collision se reproduise : overlay Fiche jeu `z-20`, `nav-fade` `z-25`, barre de
+  navigation `z-30` (auparavant `z-[1]`/`z-5`/`z-10`, trop proches des z-index déjà utilisés par
+  endroits comme les pastilles de statut).
+- Vérifié : réouverture de la fiche « Red Dead Redemption 2 » depuis la grille — plus aucune
+  pastille résiduelle par-dessus l'écran ; retour à la Bibliothèque — pastilles toujours
+  affichées correctement sur les cartes.

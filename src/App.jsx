@@ -32,7 +32,7 @@ export default function App() {
             pour que Découvrir garde sa recherche en mémoire au retour. */}
         <Screen onOpenGame={setSelectedGameId} onNavigate={selectTab} />
         {selectedGameId && (
-          <div className="fixed inset-0 z-[1] overflow-y-auto pb-28" style={{ background: "var(--bg-base)" }}>
+          <div className="fixed inset-0 z-20 overflow-y-auto pb-28" style={{ background: "var(--bg-base)" }}>
             <FicheJeu igdbId={selectedGameId} onBack={() => setSelectedGameId(null)} />
           </div>
         )}
