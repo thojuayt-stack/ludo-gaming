@@ -50,7 +50,9 @@ export default function Profil() {
   const total = entries?.length ?? 0;
   const counts = entries ? countByStatus(entries) : null;
   const avgRating = entries ? averageRating(entries) : null;
-  const topPlatform = entries ? mostFrequent(entries.map((e) => games[e.igdbId]?.platforms || [])) : null;
+  const topPlatform = entries
+    ? mostFrequent(entries.map((e) => (e.platforms?.length ? e.platforms : games[e.igdbId]?.platforms) || []))
+    : null;
   const topGenre = entries ? mostFrequent(entries.map((e) => games[e.igdbId]?.genres || [])) : null;
 
   return (

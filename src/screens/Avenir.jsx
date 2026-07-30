@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { listWishlistEntries, removeFromWishlist } from "../lib/wishlist.js";
-import { groupWishlistEntries, WISHLIST_GROUPS, WISHLIST_GROUP_LABELS } from "../lib/wishlist-pure.js";
+import { listLibraryEntries, removeFromLibrary } from "../lib/library.js";
+import {
+  groupWishlistEntries,
+  WISHLIST_GROUPS,
+  WISHLIST_GROUP_LABELS,
+  isUnreleased,
+} from "../lib/wishlist-pure.js";
 import { formatFreshness } from "../lib/library-pure.js";
 import { getGame } from "../lib/igdb.js";
 import PageHeader from "../components/PageHeader.jsx";
@@ -9,18 +14,19 @@ import Countdown from "../components/Countdown.jsx";
 import { RefreshIcon } from "../components/icons.jsx";
 
 export default function Avenir({ onOpenGame, onNavigate }) {
-  const [items, setItems] = useState(null); // [{ entry, game }]
+  const [items, setItems] = useState(null); // [{ entry, game }] — entries non possédées, jeu pas sorti
   const [confirmingId, setConfirmingId] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [oldestCachedAt, setOldestCachedAt] = useState(null);
 
   const load = useCallback(async ({ forceRefresh = false } = {}) => {
-    const entries = await listWishlistEntries();
+    const entries = await listLibraryEntries({ possede: false });
     const withGames = await Promise.all(
       entries.map(async (entry) => ({ entry, game: await getGame(entry.igdbId, { forceRefresh }) })),
     );
-    setItems(withGames);
-    const oldest = withGames.reduce((min, { game }) => {
+    const upcoming = withGames.filter(({ game }) => isUnreleased(game?.releaseDate ?? null));
+    setItems(upcoming);
+    const oldest = upcoming.reduce((min, { game }) => {
       if (game?.cachedAt == null) return min;
       return min == null ? game.cachedAt : Math.min(min, game.cachedAt);
     }, null);
@@ -38,7 +44,7 @@ export default function Avenir({ onOpenGame, onNavigate }) {
   }
 
   async function handleRemove(igdbId) {
-    await removeFromWishlist(igdbId);
+    await removeFromLibrary(igdbId);
     setConfirmingId(null);
     setItems((prev) => prev?.filter((i) => i.entry.igdbId !== igdbId) ?? null);
   }
@@ -144,7 +150,7 @@ function ReleaseRow({ item, onOpen, confirming, onRequestRemove, onCancelRemove,
           <Countdown days={daysUntil} releaseDate={game?.releaseDate} />
           <button
             className="icon-btn"
-            aria-label={`Retirer ${game?.title || "ce jeu"} de la wishlist`}
+            aria-label={`Retirer ${game?.title || "ce jeu"} de ma liste`}
             onClick={(e) => {
               e.stopPropagation();
               onRequestRemove(entry.igdbId);

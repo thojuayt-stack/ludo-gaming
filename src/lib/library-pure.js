@@ -26,6 +26,30 @@ export function sortByAddedAtDesc(entries) {
   return [...entries].sort((a, b) => b.addedAt - a.addedAt);
 }
 
+/** Non possédé => statut forcé à "à faire" — on ne peut pas être en cours/terminé sur un jeu qu'on n'a pas. */
+export function resolveStatusForPossession(possede, requestedStatus) {
+  return possede ? requestedStatus : "backlog";
+}
+
+/** Incrémenté à chaque passage VERS "terminé" (première fois comme les suivantes, via Recommencer). */
+export function nextPlayCount(currentPlayCount, previousStatus, nextStatus) {
+  const current = currentPlayCount || 0;
+  if (nextStatus === "termine" && previousStatus !== "termine") {
+    return current + 1;
+  }
+  return current;
+}
+
+/** Libellé du statut "terminé" avec le nombre de parties si rejoué. */
+export function completionLabel(playCount) {
+  return playCount > 1 ? `Terminé ×${playCount}` : "Terminé";
+}
+
+/** On ne peut pas posséder un jeu dont la date de sortie est future et connue. */
+export function isOwnershipLocked(releaseDate, now = Date.now()) {
+  return releaseDate != null && releaseDate > now;
+}
+
 // Mêmes paires de dégradés que la maquette validée (mockups/ecrans-principaux.html),
 // pour une jaquette de secours cohérente quand IGDB n'a pas de cover.
 const COVER_GRADIENTS = [

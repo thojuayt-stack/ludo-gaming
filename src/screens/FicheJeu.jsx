@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { getGame } from "../lib/igdb.js";
 import { getLibraryEntry, updateLibraryEntry, removeFromLibrary } from "../lib/library.js";
-import { STATUSES, STATUS_LABELS } from "../lib/library-pure.js";
-import { isInWishlist, removeFromWishlist } from "../lib/wishlist.js";
-import { daysUntil } from "../lib/wishlist-pure.js";
+import { STATUSES, STATUS_LABELS, completionLabel, isOwnershipLocked } from "../lib/library-pure.js";
+import { daysUntil, isUnreleased } from "../lib/wishlist-pure.js";
 import Cover from "../components/Cover.jsx";
 import Countdown from "../components/Countdown.jsx";
 import AjouterSheet from "../components/AjouterSheet.jsx";
@@ -13,7 +12,6 @@ const SUMMARY_COLLAPSE_THRESHOLD = 220;
 export default function FicheJeu({ igdbId, onBack }) {
   const [game, setGame] = useState(null);
   const [entry, setEntry] = useState(null); // LibraryEntry | null
-  const [wishlisted, setWishlisted] = useState(false);
   const [ratingInput, setRatingInput] = useState("");
   const [commentInput, setCommentInput] = useState("");
   const [confirmingRemove, setConfirmingRemove] = useState(false);
@@ -24,14 +22,9 @@ export default function FicheJeu({ igdbId, onBack }) {
   const reload = useCallback(async () => {
     setLoadError(null);
     try {
-      const [g, e, w] = await Promise.all([
-        getGame(igdbId),
-        getLibraryEntry(igdbId),
-        isInWishlist(igdbId),
-      ]);
+      const [g, e] = await Promise.all([getGame(igdbId), getLibraryEntry(igdbId)]);
       setGame(g);
       setEntry(e);
-      setWishlisted(w);
       setRatingInput(e?.rating ?? "");
       setCommentInput(e?.comment ?? "");
     } catch (err) {
@@ -43,8 +36,32 @@ export default function FicheJeu({ igdbId, onBack }) {
     reload();
   }, [reload]);
 
+  async function handlePossedeChange(possede) {
+    const updated = await updateLibraryEntry(igdbId, { possede });
+    setEntry(updated);
+    setRatingInput(updated.rating ?? "");
+    setCommentInput(updated.comment ?? "");
+  }
+
   async function handleStatusChange(status) {
     const updated = await updateLibraryEntry(igdbId, { status });
+    setEntry(updated);
+  }
+
+  async function handleTogglePlatform(p) {
+    const current = entry.platforms || [];
+    const next = current.includes(p) ? current.filter((x) => x !== p) : [...current, p];
+    const updated = await updateLibraryEntry(igdbId, { platforms: next });
+    setEntry(updated);
+  }
+
+  async function handleFinishedPlatformChange(p) {
+    const updated = await updateLibraryEntry(igdbId, { finishedPlatform: p || null });
+    setEntry(updated);
+  }
+
+  async function handleRecommencer() {
+    const updated = await updateLibraryEntry(igdbId, { status: "en_cours" });
     setEntry(updated);
   }
 
@@ -59,13 +76,8 @@ export default function FicheJeu({ igdbId, onBack }) {
     setEntry(updated);
   }
 
-  async function handleRemoveFromLibrary() {
+  async function handleRemove() {
     await removeFromLibrary(igdbId);
-    onBack();
-  }
-
-  async function handleRemoveFromWishlist() {
-    await removeFromWishlist(igdbId);
     onBack();
   }
 
@@ -91,6 +103,8 @@ export default function FicheJeu({ igdbId, onBack }) {
     : "Date TBD";
 
   const showToggle = game.summary && game.summary.length > SUMMARY_COLLAPSE_THRESHOLD;
+  const locked = isOwnershipLocked(game.releaseDate);
+  const finishedPlatformOptions = entry?.platforms?.length ? entry.platforms : game.platforms;
 
   return (
     <div className="pb-6">
@@ -131,43 +145,126 @@ export default function FicheJeu({ igdbId, onBack }) {
           <div className="glass mx-4 mt-5 flex flex-col gap-4 rounded-3xl p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-faint">Mon suivi</p>
 
-            <div className="segment flex">
-              {STATUSES.map((s) => (
+            {!entry.possede && isUnreleased(game.releaseDate) && (
+              <Countdown days={daysUntil(game.releaseDate)} releaseDate={game.releaseDate} />
+            )}
+
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-muted">Je possède ce jeu</span>
+              <div className="segment flex">
                 <button
-                  key={s}
                   type="button"
                   className="segment-item flex-1"
-                  data-active={entry.status === s}
-                  onClick={() => handleStatusChange(s)}
+                  data-active={!entry.possede}
+                  disabled={locked}
+                  onClick={() => handlePossedeChange(false)}
                 >
-                  {STATUS_LABELS[s]}
+                  Non
                 </button>
-              ))}
-            </div>
-
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted">Note (sur 10)</span>
-              <input
-                className="field"
-                type="number"
-                min="0"
-                max="10"
-                value={ratingInput}
-                onChange={(e) => setRatingInput(e.target.value)}
-                onBlur={(e) => commitRating(e.target.value)}
-              />
+                <button
+                  type="button"
+                  className="segment-item flex-1"
+                  data-active={entry.possede}
+                  disabled={locked}
+                  onClick={() => handlePossedeChange(true)}
+                >
+                  Oui
+                </button>
+              </div>
+              {locked && (
+                <span className="text-xs text-faint">
+                  Pas encore sorti — tu pourras le marquer possédé une fois disponible.
+                </span>
+              )}
             </label>
 
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted">Commentaire</span>
-              <textarea
-                className="field"
-                rows={3}
-                value={commentInput}
-                onChange={(e) => setCommentInput(e.target.value)}
-                onBlur={(e) => commitComment(e.target.value)}
-              />
-            </label>
+            {entry.possede && (
+              <div className="segment flex">
+                {STATUSES.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    className="segment-item flex-1"
+                    data-active={entry.status === s}
+                    onClick={() => handleStatusChange(s)}
+                  >
+                    {STATUS_LABELS[s]}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {game.platforms.length > 0 && (
+              <div className="flex flex-col gap-1 text-sm">
+                <span className="text-muted">Plateformes possédées</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {game.platforms.map((p) => (
+                    <button
+                      type="button"
+                      key={p}
+                      className="plat"
+                      data-active={(entry.platforms || []).includes(p)}
+                      onClick={() => handleTogglePlatform(p)}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {entry.possede && entry.status === "termine" && (
+              <>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-muted">Terminé sur quelle plateforme ?</span>
+                  <select
+                    className="field"
+                    value={entry.finishedPlatform || ""}
+                    onChange={(e) => handleFinishedPlatformChange(e.target.value)}
+                  >
+                    <option value="">—</option>
+                    {finishedPlatformOptions.map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted">{completionLabel(entry.playCount)}</span>
+                  <button type="button" className="btn-glass px-3 py-1.5 text-xs" onClick={handleRecommencer}>
+                    Recommencer
+                  </button>
+                </div>
+              </>
+            )}
+
+            {entry.possede && (
+              <>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-muted">Note (sur 10)</span>
+                  <input
+                    className="field"
+                    type="number"
+                    min="0"
+                    max="10"
+                    value={ratingInput}
+                    onChange={(e) => setRatingInput(e.target.value)}
+                    onBlur={(e) => commitRating(e.target.value)}
+                  />
+                </label>
+
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-muted">Commentaire</span>
+                  <textarea
+                    className="field"
+                    rows={3}
+                    value={commentInput}
+                    onChange={(e) => setCommentInput(e.target.value)}
+                    onBlur={(e) => commitComment(e.target.value)}
+                  />
+                </label>
+              </>
+            )}
           </div>
 
           <div className="px-4 pt-5">
@@ -178,7 +275,7 @@ export default function FicheJeu({ igdbId, onBack }) {
                   <button className="btn-glass px-3 py-1.5 text-xs" onClick={() => setConfirmingRemove(false)}>
                     Annuler
                   </button>
-                  <button className="btn-primary px-3 py-1.5 text-xs" onClick={handleRemoveFromLibrary}>
+                  <button className="btn-primary px-3 py-1.5 text-xs" onClick={handleRemove}>
                     Oui, retirer
                   </button>
                 </div>
@@ -192,33 +289,10 @@ export default function FicheJeu({ igdbId, onBack }) {
         </>
       ) : (
         <div className="glass mx-4 mt-5 flex flex-col gap-4 rounded-3xl p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-faint">
-            {wishlisted ? "Dans ta wishlist" : "Pas encore suivi"}
-          </p>
-
-          {wishlisted && <Countdown days={daysUntil(game.releaseDate)} releaseDate={game.releaseDate} />}
-
-          {confirmingRemove ? (
-            <div className="flex gap-3">
-              <button className="btn-glass flex-1" onClick={() => setConfirmingRemove(false)}>
-                Annuler
-              </button>
-              <button className="btn-primary flex-1" onClick={handleRemoveFromWishlist}>
-                Oui, retirer
-              </button>
-            </div>
-          ) : (
-            <div className="flex gap-3">
-              {wishlisted && (
-                <button className="btn-glass flex-1" onClick={() => setConfirmingRemove(true)}>
-                  Retirer de la wishlist
-                </button>
-              )}
-              <button className="btn-primary flex-1" onClick={() => setShowAddSheet(true)}>
-                Ajouter à ma bibliothèque
-              </button>
-            </div>
-          )}
+          <p className="text-xs font-semibold uppercase tracking-wide text-faint">Pas encore suivi</p>
+          <button className="btn-primary" onClick={() => setShowAddSheet(true)}>
+            Ajouter à ma bibliothèque
+          </button>
         </div>
       )}
 
@@ -228,7 +302,8 @@ export default function FicheJeu({ igdbId, onBack }) {
           onClose={() => setShowAddSheet(false)}
           onAdded={(newEntry) => {
             setEntry(newEntry);
-            setWishlisted(false);
+            setRatingInput(newEntry.rating ?? "");
+            setCommentInput(newEntry.comment ?? "");
             setShowAddSheet(false);
           }}
         />

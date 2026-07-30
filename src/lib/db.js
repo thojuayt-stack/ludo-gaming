@@ -1,4 +1,4 @@
-import { createStore, get, set, del, values } from "idb-keyval";
+import { createStore, get, set, del, values, clear } from "idb-keyval";
 
 // Deux bases distinctes plutôt que deux stores dans une seule base : idb-keyval
 // ne rejoue pas onupgradeneeded si la base existe déjà, donc un second
@@ -19,9 +19,9 @@ export const libraryDb = {
   values: () => values(libraryStore),
 };
 
+// Conservée uniquement pour la migration ponctuelle vers LibraryEntry (chantier 4) —
+// plus aucun écran ne lit/écrit directement cette base.
 export const wishlistDb = {
-  get: (igdbId) => get(igdbId, wishlistStore),
-  set: (igdbId, value) => set(igdbId, value, wishlistStore),
-  del: (igdbId) => del(igdbId, wishlistStore),
   values: () => values(wishlistStore),
+  clear: () => clear(wishlistStore),
 };

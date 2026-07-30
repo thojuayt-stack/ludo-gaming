@@ -1,17 +1,16 @@
 import { listLibraryEntries } from "./library.js";
-import { listWishlistEntries } from "./wishlist.js";
 import { gameCacheDb } from "./db.js";
 import { buildExportPayload } from "./export-pure.js";
 
 export { buildExportPayload } from "./export-pure.js";
 
-/** Lit IndexedDB et construit le payload d'export (bibliothèque + wishlist, titres inclus). */
+/** Lit IndexedDB et construit le payload d'export (bibliothèque unifiée, titres inclus). */
 export async function gatherExportData() {
-  const [library, wishlist] = await Promise.all([listLibraryEntries(), listWishlistEntries()]);
-  const allIds = [...new Set([...library.map((e) => e.igdbId), ...wishlist.map((e) => e.igdbId)])];
+  const library = await listLibraryEntries();
+  const allIds = [...new Set(library.map((e) => e.igdbId))];
   const games = await Promise.all(allIds.map((id) => gameCacheDb.get(id)));
   const titleById = Object.fromEntries(allIds.map((id, i) => [id, games[i]?.title ?? null]));
-  return buildExportPayload({ library, wishlist, titleById });
+  return buildExportPayload({ library, titleById });
 }
 
 /** Déclenche le téléchargement navigateur d'un objet JSON — effet de bord, non testé unitairement. */

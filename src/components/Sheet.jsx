@@ -1,7 +1,7 @@
 export default function Sheet({ title, onClose, closable = true, children }) {
   return (
     <div
-      className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 backdrop-blur-sm"
       onClick={() => closable && onClose()}
     >
       <div

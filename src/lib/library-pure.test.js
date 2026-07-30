@@ -7,6 +7,10 @@ import {
   placeholderCoverGradient,
   isCacheFresh,
   formatFreshness,
+  resolveStatusForPossession,
+  nextPlayCount,
+  completionLabel,
+  isOwnershipLocked,
 } from "./library-pure.js";
 
 test("ratingToStars renvoie null si aucune note", () => {
@@ -71,4 +75,39 @@ test("formatFreshness humanise minutes / heures / jours", () => {
   assert.equal(formatFreshness(now - 5 * 60_000, now), "il y a 5 min");
   assert.equal(formatFreshness(now - 3 * 60 * 60_000, now), "il y a 3 h");
   assert.equal(formatFreshness(now - 2 * 24 * 60 * 60_000, now), "il y a 2 j");
+});
+
+test("resolveStatusForPossession force 'backlog' si non possédé", () => {
+  assert.equal(resolveStatusForPossession(false, "en_cours"), "backlog");
+  assert.equal(resolveStatusForPossession(false, "termine"), "backlog");
+});
+
+test("resolveStatusForPossession laisse passer le statut demandé si possédé", () => {
+  assert.equal(resolveStatusForPossession(true, "en_cours"), "en_cours");
+  assert.equal(resolveStatusForPossession(true, "termine"), "termine");
+});
+
+test("nextPlayCount incrémente uniquement en entrant dans 'termine'", () => {
+  assert.equal(nextPlayCount(0, "en_cours", "termine"), 1);
+  assert.equal(nextPlayCount(1, "termine", "en_cours"), 1); // recommencer n'incrémente pas
+  assert.equal(nextPlayCount(1, "en_cours", "termine"), 2); // terminé une 2e fois
+  assert.equal(nextPlayCount(0, "backlog", "en_cours"), 0);
+});
+
+test("nextPlayCount traite un compteur absent comme 0", () => {
+  assert.equal(nextPlayCount(undefined, "en_cours", "termine"), 1);
+});
+
+test("completionLabel affiche le nombre de parties seulement au-delà de 1", () => {
+  assert.equal(completionLabel(1), "Terminé");
+  assert.equal(completionLabel(0), "Terminé");
+  assert.equal(completionLabel(2), "Terminé ×2");
+  assert.equal(completionLabel(5), "Terminé ×5");
+});
+
+test("isOwnershipLocked est vrai seulement pour une date de sortie future connue", () => {
+  const now = Date.now();
+  assert.equal(isOwnershipLocked(null, now), false); // TBD : éditable
+  assert.equal(isOwnershipLocked(now - 1000, now), false); // déjà sorti : éditable
+  assert.equal(isOwnershipLocked(now + 1000, now), true); // futur connu : verrouillé
 });

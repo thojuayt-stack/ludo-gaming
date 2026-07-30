@@ -9,42 +9,50 @@ finit par coder d'après une description qui ne correspond plus à rien.
 
 ## ⭐ CE QUE FAIT L'APP AUJOURD'HUI
 
-Les 3 chantiers du périmètre MVP initial sont codés et vérifiés en conditions réelles (recettes
-cochées le 2026-07-30 : [CAHIER-DES-CHARGES-bibliotheque.md](CAHIER-DES-CHARGES-bibliotheque.md),
-[CAHIER-DES-CHARGES-a-venir.md](CAHIER-DES-CHARGES-a-venir.md),
-[CAHIER-DES-CHARGES-profil.md](CAHIER-DES-CHARGES-profil.md)) :
+Le périmètre MVP initial (3 chantiers) est codé, et un 4ᵉ chantier a depuis fusionné la
+wishlist dans le modèle de bibliothèque unifié (recettes cochées : voir les 4 cahiers des
+charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul concept,
+`LibraryEntry`, avec un champ `possede`.
 
 - **Découvrir** : recherche live sur IGDB (debounce 300 ms, spinner pendant le chargement),
-  résultats avec cover/plateformes. Chaque résultat est cliquable et ouvre sa Fiche jeu ; l'ajout
-  reste possible sans y entrer. Un seul bouton d'action par résultat, **mutuellement exclusif**
-  selon la sortie du jeu : pas encore sorti → ajout à la **wishlist** (un tap, sans formulaire) ;
-  déjà sorti → ajout à la **bibliothèque** (statut + note /10 + commentaire, via une Sheet). Un
-  jeu déjà présent dans l'une ou l'autre affiche un badge à la place du bouton (pas de doublon
-  possible). La recherche reste affichée si on ouvre une fiche puis revient en arrière (l'écran
-  actif ne se démonte pas quand une Fiche jeu s'ouvre par-dessus).
+  résultats avec cover/plateformes. Chaque résultat est cliquable (ouvre sa Fiche jeu) et porte
+  un bouton d'ajout (« Déjà suivi » si déjà présent). L'ajout ouvre toujours la même Sheet :
+  toggle « Je possède ce jeu » (forcé à Non, désactivé, si la date de sortie est future et
+  connue ; éditable sinon), statut (si possédé), plateformes possédées (case à cocher,
+  optionnel), note/commentaire (si possédé). La recherche reste affichée si on ouvre une fiche
+  puis revient en arrière (l'écran actif ne se démonte pas quand une Fiche jeu s'ouvre
+  par-dessus).
 - **Bibliothèque** : vue Grille par défaut (bascule Liste disponible), filtre par statut
   (Tous/**À faire**/En cours/Terminé/Abandonné — « À faire » est le libellé affiché, la clé
   interne reste `backlog`), navigable aussi par glissement tactile gauche/droite entre les
-  filtres, état vide avec message d'invitation et bouton "Ajouter un jeu" vers Découvrir (même
-  bouton sur l'état vide d'À venir).
-- **À venir** : wishlist groupée par échéance (Sorti / Aujourd'hui / Cette semaine / Ce mois-ci
-  / Plus tard, calculée en jours glissants), countdown adapté (jours si ≤60j, mois/année
-  au-delà, « Date TBD » sinon), indicateur de fraîcheur + bouton Actualiser (force le
-  rafraîchissement IGDB), retrait avec confirmation.
+  filtres. Un jeu non possédé affiche « Pas possédé » à la place de son statut (toujours « À
+  faire » dans ce cas). État vide avec bouton "Ajouter un jeu" vers Découvrir (même bouton sur
+  l'état vide d'À venir).
+- **À venir** : vue *filtrée* sur la Bibliothèque (jeux `possede = false` dont la date de
+  sortie n'est pas encore passée), groupée par échéance (Sorti / Aujourd'hui / Cette semaine /
+  Ce mois-ci / Plus tard, calculée en jours glissants), countdown adapté (jours si ≤60j,
+  mois/année au-delà, « Date TBD » sinon), indicateur de fraîcheur + bouton Actualiser, retrait
+  avec confirmation (retire complètement l'entrée).
 - **Fiche jeu** : mise en page côte à côte — jaquette entière et nette à gauche (sans rognage,
-  `object-fit: contain`), infos (plateformes, genres, date de sortie ou « Date TBD ») à droite,
-  synopsis en dessous. S'adapte à 3 cas : dans la Bibliothèque (bloc « Mon suivi » éditable — statut, note,
-  commentaire, sauvegarde automatique, retrait avec confirmation), uniquement en wishlist
-  (bloc « Dans ta wishlist » avec countdown + retirer/ajouter à la bibliothèque), ou ni l'un ni
-  l'autre (cas non atteignable actuellement). Ajouter à la Bibliothèque un jeu wishlisté retire
-  automatiquement l'entrée wishlist.
+  `object-fit: contain`), infos à droite, synopsis en dessous. Bloc « Mon suivi » unique
+  (2 cas : le jeu est dans la bibliothèque, ou pas encore ajouté) avec toggle possession,
+  statut (si possédé), plateformes possédées, plateforme de complétion + compteur
+  « Terminé ×N » + bouton **Recommencer** (si terminé), note/commentaire (si possédé, jamais
+  effacés si on décoche possession — juste masqués), retrait avec confirmation.
 - **Profil** : donut + 4 tuiles de statistiques calculées localement (jeux terminés, plateforme
-  et genre les plus fréquents, note moyenne — « — » si rien à calculer plutôt qu'un NaN),
-  réglage d'apparence (Système/Clair/Sombre, persisté, avec script anti-flash dans
-  `index.html`), export JSON complet (bibliothèque + wishlist, titres lisibles inclus).
+  et genre les plus fréquents — la plateforme utilise en priorité celles cochées comme
+  possédées, note moyenne — « — » si rien à calculer plutôt qu'un NaN), réglage d'apparence
+  (Système/Clair/Sombre, persisté, avec script anti-flash dans `index.html`), export JSON
+  complet (un seul tableau `library`, titres lisibles inclus).
 - Toutes les données personnelles sont en IndexedDB local, persistent après rechargement complet
   de la page. Le catalogue IGDB passe uniquement par le proxy serverless `api/igdb/*` (liste
   blanche stricte) — confirmé sans clé/token visible côté navigateur.
+- **Deux migrations automatiques** tournent une seule fois au premier chargement après mise à
+  jour (`src/main.jsx`) : `migrateLibrarySchema` (complète les `LibraryEntry` créées avant le
+  chantier 4 avec `possede: true` par défaut) et `migrateWishlistToLibrary` (convertit les
+  anciennes wishlist en `LibraryEntry` « à faire, non possédé »). Sans la première, tous les
+  jeux déjà suivis seraient apparus comme non possédés après la mise à jour (bug réel trouvé et
+  corrigé pendant la vérification de ce chantier).
 
 **Comment lancer l'app en local** : `npm run dev` (Vite, port 5173) **et**, dans un autre
 terminal, `vercel dev --listen 3000` (proxy IGDB, nécessite `.env.local` avec
@@ -167,16 +175,15 @@ des charges (corrections/ajustements UX contenus, sans impact sur le modèle de 
   ajouté/retiré pour ne pas perturber les données de l'utilisateur) ; l'état vide a été vérifié
   via un filtre de statut sans résultat plutôt qu'en vidant la bibliothèque.
 
-**Retours reçus mais volontairement pas encore traités**, en attente de cadrage produit avec
-l'utilisateur avant tout code (voir prochaine conversation) :
+**Retours reçus mais volontairement pas encore traités** :
 - Onboarding première visite avec suggestions de jeux connus, et recommandations dans Découvrir
   basées sur l'historique — nécessitent une nouvelle capacité côté proxy (liste de jeux
-  populaires/tendances), pas encore conçue.
-- Distinction possession/wishlist dans « À faire », sélection des plateformes possédées et de
-  la plateforme de complétion, rejouer un jeu terminé (compteur d'itérations) — modifient tous
-  le modèle `LibraryEntry` posé aux chantiers 1-2 ; l'utilisateur a explicitement formulé le
-  premier point comme une question ouverte, pas une décision arrêtée.
+  populaires/tendances), pas encore conçue. En attente de cadrage (sur quoi baser les
+  recommandations : genres de la bibliothèque, plateformes possédées, autre).
 - Temps de jeu par jeu — explicitement noté par l'utilisateur comme un sujet V2.
+
+*(Distinction possession/wishlist, plateformes possédées/de complétion, rejouer un jeu terminé
+— traités à la livraison 7 ci-dessous.)*
 
 ### Livraison 5 — Layout Fiche jeu + navigation tactile (2026-07-30)
 - `src/components/Cover.jsx` : nouvelle prop `fit` (`"cover"` par défaut, `"contain"` pour la
@@ -212,3 +219,32 @@ l'utilisateur avant tout code (voir prochaine conversation) :
 - Vérifié : réouverture de la fiche « Red Dead Redemption 2 » depuis la grille — plus aucune
   pastille résiduelle par-dessus l'écran ; retour à la Bibliothèque — pastilles toujours
   affichées correctement sur les cartes.
+
+### Livraison 7 — Chantier possession/plateformes/rejouer (2026-07-30)
+- Cahier des charges validé :
+  [CAHIER-DES-CHARGES-possession-plateformes.md](CAHIER-DES-CHARGES-possession-plateformes.md).
+- **Modèle unifié** : `WishlistEntry` retirée, `LibraryEntry` gagne `possede`, `platforms`,
+  `finishedPlatform`, `playCount`. Règles pures ajoutées dans `library-pure.js`
+  (`resolveStatusForPossession`, `nextPlayCount`, `completionLabel`, `isOwnershipLocked` — 9
+  nouveaux tests).
+- **Deux migrations** au démarrage (`src/main.jsx`) : `migrateLibrarySchema` puis
+  `migrateWishlistToLibrary`, toutes deux idempotentes (flag `localStorage`).
+- `AjouterSheet.jsx`, `FicheJeu.jsx`, `Bibliotheque.jsx` (badge « Pas possédé »),
+  `Avenir.jsx` (devient une vue filtrée sur `LibraryEntry`), `Decouvrir.jsx` (un seul bouton
+  d'ajout, la distinction wishlist/bibliothèque du chantier 2 disparaît), `Profil.jsx`
+  (plateforme la + jouée basée sur les plateformes possédées), `export.js`/`export-pure.js`
+  (export unifié, un seul tableau `library`) mis à jour. `src/lib/wishlist.js` supprimé
+  (devenu inutile).
+- **Deux bugs trouvés et corrigés pendant la vérification en conditions réelles** (détail dans
+  le cahier des charges) :
+  1. Sans `migrateLibrarySchema`, tous les jeux déjà suivis avant ce chantier apparaissaient
+     comme « non possédés » (`possede` valait `undefined`, donc faux) — corrigé par une
+     migration de schéma dédiée, en plus de celle de la wishlist.
+  2. La Sheet d'ajout partageait le même `z-index` (30) que la barre de navigation (bump de la
+     livraison 6), qui passait par-dessus et interceptait les clics sur ses boutons du bas —
+     un ajout de jeu a silencieusement échoué avant que ce soit repéré. Corrigé : Sheet en
+     `z-40`, strictement au-dessus de toute la navigation.
+- Recette entièrement vérifiée en conditions réelles sur les données déjà présentes dans l'app
+  (aucune donnée réelle perdue), plus des ajouts/retraits de test nettoyés après vérification.
+- **Non traité** (retours en attente d'une nouvelle capacité côté proxy, voir plus haut) :
+  suggestions à l'onboarding et recommandations dans Découvrir basées sur l'historique.

@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
 import { searchGames, IgdbError } from "../lib/igdb.js";
 import { isInLibrary } from "../lib/library.js";
-import { isInWishlist, addToWishlist } from "../lib/wishlist.js";
-import { isUnreleased } from "../lib/wishlist-pure.js";
 import PageHeader from "../components/PageHeader.jsx";
 import Cover from "../components/Cover.jsx";
 import AjouterSheet from "../components/AjouterSheet.jsx";
-import { BookmarkIcon } from "../components/icons.jsx";
 
 export default function Decouvrir({ onOpenGame }) {
   const [term, setTerm] = useState("");
   const [results, setResults] = useState([]);
-  const [presence, setPresence] = useState({}); // igdbId -> { inLibrary, inWishlist }
+  const [presence, setPresence] = useState({}); // igdbId -> déjà suivi (bibliothèque, possédé ou non)
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [addingGame, setAddingGame] = useState(null);
@@ -31,10 +28,7 @@ export default function Decouvrir({ onOpenGame }) {
         const games = await searchGames(trimmed);
         setResults(games);
         const presenceEntries = await Promise.all(
-          games.map(async (g) => [
-            g.igdbId,
-            { inLibrary: await isInLibrary(g.igdbId), inWishlist: await isInWishlist(g.igdbId) },
-          ]),
+          games.map(async (g) => [g.igdbId, await isInLibrary(g.igdbId)]),
         );
         setPresence(Object.fromEntries(presenceEntries));
       } catch (err) {
@@ -46,11 +40,6 @@ export default function Decouvrir({ onOpenGame }) {
     }, 300);
     return () => clearTimeout(handle);
   }, [term]);
-
-  async function handleAddToWishlist(game) {
-    await addToWishlist(game.igdbId);
-    setPresence((p) => ({ ...p, [game.igdbId]: { ...p[game.igdbId], inWishlist: true } }));
-  }
 
   const trimmedTerm = term.trim();
 
@@ -81,8 +70,7 @@ export default function Decouvrir({ onOpenGame }) {
 
       <ul className="flex flex-col gap-2 px-4">
         {results.map((game) => {
-          const { inLibrary, inWishlist } = presence[game.igdbId] || {};
-          const unreleased = isUnreleased(game.releaseDate);
+          const alreadyTracked = presence[game.igdbId];
           return (
             <li
               key={game.igdbId}
@@ -100,28 +88,14 @@ export default function Decouvrir({ onOpenGame }) {
               </div>
 
               <div className="flex flex-shrink-0 items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                {inLibrary ? (
+                {alreadyTracked ? (
                   <button className="btn-glass px-3 py-1.5 text-xs" onClick={() => onOpenGame(game.igdbId)}>
-                    Déjà ajouté
+                    Déjà suivi
                   </button>
-                ) : unreleased ? (
-                  inWishlist ? (
-                    <button className="btn-glass px-3 py-1.5 text-xs" onClick={() => onOpenGame(game.igdbId)}>
-                      Dans ta wishlist
-                    </button>
-                  ) : (
-                    <button
-                      className="icon-btn"
-                      aria-label={`Ajouter ${game.title} à ma wishlist`}
-                      onClick={() => handleAddToWishlist(game)}
-                    >
-                      <BookmarkIcon />
-                    </button>
-                  )
                 ) : (
                   <button
                     className="add-btn"
-                    aria-label={`Ajouter ${game.title} à ma bibliothèque`}
+                    aria-label={`Ajouter ${game.title}`}
                     onClick={() => setAddingGame(game)}
                   >
                     +
@@ -138,7 +112,7 @@ export default function Decouvrir({ onOpenGame }) {
           game={addingGame}
           onClose={() => setAddingGame(null)}
           onAdded={() => {
-            setPresence((p) => ({ ...p, [addingGame.igdbId]: { inLibrary: true, inWishlist: false } }));
+            setPresence((p) => ({ ...p, [addingGame.igdbId]: true }));
             setAddingGame(null);
           }}
         />

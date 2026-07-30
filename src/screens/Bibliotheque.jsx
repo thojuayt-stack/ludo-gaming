@@ -105,7 +105,7 @@ export default function Bibliotheque({ onOpenGame, onNavigate }) {
                 onClick={() => onOpenGame(entry.igdbId)}
               >
                 <span className={`pill pill-${entry.status} absolute left-1.5 top-1.5 z-10`}>
-                  {STATUS_LABELS[entry.status]}
+                  {entry.possede ? STATUS_LABELS[entry.status] : "Pas possédé"}
                 </span>
                 <Cover title={game?.title} coverUrl={game?.coverUrl} className="aspect-[3/4] w-full" />
                 <figcaption className="mt-1.5 text-xs font-semibold leading-tight">{game?.title}</figcaption>
@@ -127,7 +127,7 @@ export default function Bibliotheque({ onOpenGame, onNavigate }) {
                   <h3 className="truncate text-sm font-semibold">{game?.title}</h3>
                   <div className="mt-1 flex flex-wrap items-center gap-1.5">
                     {game?.platforms?.[0] && <span className="plat">{game.platforms[0]}</span>}
-                    <StatusPill status={entry.status} />
+                    <StatusPill status={entry.status} possede={entry.possede} />
                     <Stars rating={entry.rating} />
                   </div>
                 </div>
