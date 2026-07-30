@@ -177,3 +177,8 @@ l'utilisateur avant tout code (voir prochaine conversation) :
 - Glissement gauche/droite entre les filtres de statut sur mobile (À faire/En cours/Terminé/
   Abandonné) — pas de dépendance au modèle de données, mais pas encore fait.
 - Temps de jeu par jeu — explicitement noté par l'utilisateur comme un sujet V2.
+- Fiche jeu (2026-07-30, retour visuel annoté) : passer d'un hero pleine largeur à une mise en
+  page côte à côte — image entière et nette à gauche, infos (titre/plateformes/genres/date) à
+  droite, description conservée en dessous. Actuellement le cover remplit une bannière large
+  courte (`h-56 w-full`, `object-fit: cover`) qui rogne les jaquettes portrait ; à revoir avec
+  ce nouveau layout plutôt qu'en isolation.
