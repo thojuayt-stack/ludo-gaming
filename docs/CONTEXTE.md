@@ -9,47 +9,44 @@ finit par coder d'après une description qui ne correspond plus à rien.
 
 ## ⭐ CE QUE FAIT L'APP AUJOURD'HUI
 
-Le chantier 1 est codé et vérifié en conditions réelles (recette du cahier des charges cochée
-le 2026-07-30, voir [CAHIER-DES-CHARGES-bibliotheque.md](CAHIER-DES-CHARGES-bibliotheque.md)) :
+Les 3 chantiers du périmètre MVP initial sont codés et vérifiés en conditions réelles (recettes
+cochées le 2026-07-30 : [CAHIER-DES-CHARGES-bibliotheque.md](CAHIER-DES-CHARGES-bibliotheque.md),
+[CAHIER-DES-CHARGES-a-venir.md](CAHIER-DES-CHARGES-a-venir.md),
+[CAHIER-DES-CHARGES-profil.md](CAHIER-DES-CHARGES-profil.md)) :
 
-- **Découvrir** : recherche live sur IGDB (debounce 300 ms), résultats avec cover/plateformes,
-  bouton d'ajout à la bibliothèque (statut + note optionnelle /10 + commentaire) via une Sheet.
-  Un jeu déjà présent affiche « Déjà ajouté » à la place du bouton (pas de doublon possible).
+- **Découvrir** : recherche live sur IGDB (debounce 300 ms), résultats avec cover/plateformes.
+  Deux actions par résultat : ajout à la **bibliothèque** (statut + note /10 + commentaire, via
+  une Sheet) et, si le jeu n'est pas encore sorti, ajout à la **wishlist** (un tap, sans
+  formulaire). Un jeu déjà présent dans l'une ou l'autre affiche un badge à la place du bouton
+  (pas de doublon possible).
 - **Bibliothèque** : vue Grille par défaut (bascule Liste disponible), filtre par statut
   (Tous/Backlog/En cours/Terminé/Abandonné), état vide avec message d'invitation.
-- **Fiche jeu** : infos IGDB (plateformes, genres, date de sortie ou « Date TBD », synopsis),
-  bloc « Mon suivi » éditable (statut, note, commentaire, sauvegarde automatique), suppression
-  avec confirmation.
-- Toutes les données personnelles (statut/note/commentaire) sont en IndexedDB local, persistent
-  après rechargement complet de la page. Le catalogue IGDB passe uniquement par le proxy
-  serverless `api/igdb/*` (liste blanche stricte) — confirmé sans clé/token visible côté
-  navigateur.
-Le chantier 2 est codé et vérifié en conditions réelles (recette cochée le 2026-07-30, voir
-[CAHIER-DES-CHARGES-a-venir.md](CAHIER-DES-CHARGES-a-venir.md)) :
-
 - **À venir** : wishlist groupée par échéance (Sorti / Aujourd'hui / Cette semaine / Ce mois-ci
   / Plus tard, calculée en jours glissants), countdown adapté (jours si ≤60j, mois/année
-  au-delà, « Date TBD » sinon), indicateur de fraîcheur des dates + bouton Actualiser (force le
-  rafraîchissement IGDB de toute la wishlist), retrait avec confirmation directement depuis la
-  liste, état vide avec message d'invitation.
-- **Découvrir** : un second bouton (icône marque-page) permet d'ajouter un jeu **pas encore
-  sorti** à la wishlist, en plus du bouton d'ajout à la bibliothèque existant. Un jeu déjà en
-  wishlist affiche « Dans ta wishlist » ; un jeu déjà sorti n'a pas de bouton wishlist.
-- **Fiche jeu** s'adapte à 3 cas : dans la Bibliothèque (bloc « Mon suivi » inchangé),
-  uniquement en wishlist (bloc « Dans ta wishlist » avec countdown + retirer/ajouter à la
-  bibliothèque), ou ni l'un ni l'autre (cas non atteignable actuellement).
-- Ajouter à la Bibliothèque un jeu qui était en wishlist la retire automatiquement de celle-ci
-  (un jeu qu'on suit n'a plus de sens dans une liste d'attente).
-- **Profil** reste un écran placeholder (« Bientôt disponible ») — seul chantier restant du
-  périmètre MVP initial.
+  au-delà, « Date TBD » sinon), indicateur de fraîcheur + bouton Actualiser (force le
+  rafraîchissement IGDB), retrait avec confirmation.
+- **Fiche jeu** : infos IGDB (plateformes, genres, date de sortie ou « Date TBD », synopsis).
+  S'adapte à 3 cas : dans la Bibliothèque (bloc « Mon suivi » éditable — statut, note,
+  commentaire, sauvegarde automatique, retrait avec confirmation), uniquement en wishlist
+  (bloc « Dans ta wishlist » avec countdown + retirer/ajouter à la bibliothèque), ou ni l'un ni
+  l'autre (cas non atteignable actuellement). Ajouter à la Bibliothèque un jeu wishlisté retire
+  automatiquement l'entrée wishlist.
+- **Profil** : donut + 4 tuiles de statistiques calculées localement (jeux terminés, plateforme
+  et genre les plus fréquents, note moyenne — « — » si rien à calculer plutôt qu'un NaN),
+  réglage d'apparence (Système/Clair/Sombre, persisté, avec script anti-flash dans
+  `index.html`), export JSON complet (bibliothèque + wishlist, titres lisibles inclus).
+- Toutes les données personnelles sont en IndexedDB local, persistent après rechargement complet
+  de la page. Le catalogue IGDB passe uniquement par le proxy serverless `api/igdb/*` (liste
+  blanche stricte) — confirmé sans clé/token visible côté navigateur.
 
 **Comment lancer l'app en local** : `npm run dev` (Vite, port 5173) **et**, dans un autre
 terminal, `vercel dev --listen 3000` (proxy IGDB, nécessite `.env.local` avec
-`TWITCH_CLIENT_ID`/`TWITCH_CLIENT_SECRET` — voir la section Twitch du cahier des charges).
+`TWITCH_CLIENT_ID`/`TWITCH_CLIENT_SECRET` — voir la section Twitch du cahier des charges du
+chantier 1).
 
-**Périmètre MVP restant à construire** :
-- L'onglet **Profil** : statistiques, thème clair/sombre, export JSON.
-- **Aucun compte, aucune base en ligne, aucun social** pour le MVP (prévu V2).
+**Périmètre MVP** : entièrement construit. Reste hors périmètre (V2, décidé au cadrage) :
+compte, base en ligne, social. Import/restauration d'un export JSON et rétrospective annuelle
+ont été explicitement écartés du chantier Profil (voir son cahier des charges).
 
 ## Décisions figées
 
@@ -122,3 +119,24 @@ terminal, `vercel dev --listen 3000` (proxy IGDB, nécessite `.env.local` avec
   dates au moment du test.
 - Prochaine étape : chantier 3 (Profil — statistiques, thème clair/sombre, export JSON), seul
   chantier restant du périmètre MVP initial.
+
+### Livraison 3 — Chantier Profil (2026-07-30)
+- Cahier des charges rédigé et validé : [CAHIER-DES-CHARGES-profil.md](CAHIER-DES-CHARGES-profil.md).
+- Logique pure dans `src/lib/stats-pure.js` (comptage par statut, moyenne de note, valeur la
+  plus fréquente avec tie-break alphabétique, calcul des segments SVG du donut — 10 tests) et
+  `src/lib/export-pure.js` (construction du payload d'export, 3 tests) ; `src/lib/export.js`
+  (orchestration IndexedDB + téléchargement) et `src/lib/theme.js` (préférence de thème)
+  complètent la couche pure.
+- Composant `src/components/Donut.jsx` (couleurs sémantiques déjà utilisées ailleurs, pas de
+  nouvelle couleur). Écran `src/screens/Profil.jsx` codé (remplace le placeholder).
+- Script anti-flash ajouté dans `index.html` (lit `localStorage.theme` avant le premier rendu
+  React), conformément au point technique du design system.
+- Recette entièrement vérifiée en conditions réelles (voir le cahier des charges) : stats
+  correctes sur des données réelles (note moyenne ignorant les jeux non notés, pas de NaN),
+  bibliothèque vide gérée, thème Clair/Sombre appliqué immédiatement et persistant après
+  rechargement, export contenant des titres lisibles.
+- Non vérifié : absence de flash du mauvais thème sur la toute première frame (limite des
+  outils de test disponibles, pas du code — le script est en place et relu).
+- **Périmètre MVP initial entièrement construit.** Prochaine étape à décider avec
+  l'utilisateur : recette globale de bout en bout, durcissement (hors-ligne, gros volumes),
+  ou début du périmètre V2 (social).

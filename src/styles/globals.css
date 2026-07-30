@@ -329,6 +329,29 @@ textarea.field { resize: vertical; }
 .refresh-btn svg { width: 0.8rem; height: 0.8rem; }
 .refresh-btn:disabled { opacity: 0.5; }
 
+.donut-wrap { position: relative; width: 8.5rem; height: 8.5rem; margin: 0 auto; }
+.donut-wrap .center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.donut-wrap .center b { font-size: 1.4rem; }
+.donut-wrap .center span { font-size: 0.68rem; color: var(--faint); }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+  justify-content: center;
+  margin-top: 0.9rem;
+  font-size: 0.76rem;
+}
+.legend .dot { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--muted); }
+.legend .dot::before { content: ""; width: 0.55rem; height: 0.55rem; border-radius: 9999px; background: var(--c); }
+
 /* ── Bottom nav ── */
 nav.bottom-nav {
   position: fixed;
