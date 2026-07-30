@@ -240,6 +240,8 @@ textarea.field { resize: vertical; }
   opacity: 0.85;
 }
 .cover img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+.cover[data-fit="contain"] { background: var(--glass-bg); border: 1px solid var(--glass-border); }
+.cover[data-fit="contain"]::after { content: none; }
 
 .pill {
   display: inline-flex;

@@ -98,26 +98,33 @@ export default function FicheJeu({ igdbId, onBack }) {
         <button className="btn-glass px-3 py-1.5 text-sm" onClick={onBack}>← Retour</button>
       </div>
 
-      <div className="px-4 pt-4">
-        <Cover title={game.title} coverUrl={game.coverUrl} className="h-56 w-full" />
+      <div className="flex gap-4 px-4 pt-4">
+        <Cover
+          title={game.title}
+          coverUrl={game.coverUrl}
+          fit="contain"
+          className="aspect-[3/4] w-28 flex-shrink-0"
+        />
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl font-semibold">{game.title}</h1>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {game.platforms.map((p) => <span key={p} className="plat">{p}</span>)}
+            {game.genres.map((g) => <span key={g} className="plat">{g}</span>)}
+          </div>
+          <p className="mt-2 text-sm text-muted">{releaseLabel}</p>
+        </div>
       </div>
 
-      <div className="px-4 pt-4">
-        <h1 className="text-xl font-semibold">{game.title}</h1>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {game.platforms.map((p) => <span key={p} className="plat">{p}</span>)}
-          {game.genres.map((g) => <span key={g} className="plat">{g}</span>)}
+      {game.summary && (
+        <div className="px-4 pt-4">
+          <p className={`text-sm text-muted ${expanded ? "" : "line-clamp-4"}`}>{game.summary}</p>
+          {showToggle && (
+            <button className="mt-1 text-xs font-semibold text-accent" onClick={() => setExpanded((v) => !v)}>
+              {expanded ? "Voir moins" : "Voir plus"}
+            </button>
+          )}
         </div>
-        <p className="mt-2 text-sm text-muted">{releaseLabel}</p>
-        {game.summary && (
-          <p className={`mt-3 text-sm text-muted ${expanded ? "" : "line-clamp-4"}`}>{game.summary}</p>
-        )}
-        {showToggle && (
-          <button className="mt-1 text-xs font-semibold text-accent" onClick={() => setExpanded((v) => !v)}>
-            {expanded ? "Voir moins" : "Voir plus"}
-          </button>
-        )}
-      </div>
+      )}
 
       {entry ? (
         <>

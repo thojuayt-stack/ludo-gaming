@@ -24,14 +24,16 @@ cochées le 2026-07-30 : [CAHIER-DES-CHARGES-bibliotheque.md](CAHIER-DES-CHARGES
   actif ne se démonte pas quand une Fiche jeu s'ouvre par-dessus).
 - **Bibliothèque** : vue Grille par défaut (bascule Liste disponible), filtre par statut
   (Tous/**À faire**/En cours/Terminé/Abandonné — « À faire » est le libellé affiché, la clé
-  interne reste `backlog`), état vide avec message d'invitation et bouton "Ajouter un jeu" vers
-  Découvrir (même bouton sur l'état vide d'À venir).
+  interne reste `backlog`), navigable aussi par glissement tactile gauche/droite entre les
+  filtres, état vide avec message d'invitation et bouton "Ajouter un jeu" vers Découvrir (même
+  bouton sur l'état vide d'À venir).
 - **À venir** : wishlist groupée par échéance (Sorti / Aujourd'hui / Cette semaine / Ce mois-ci
   / Plus tard, calculée en jours glissants), countdown adapté (jours si ≤60j, mois/année
   au-delà, « Date TBD » sinon), indicateur de fraîcheur + bouton Actualiser (force le
   rafraîchissement IGDB), retrait avec confirmation.
-- **Fiche jeu** : infos IGDB (plateformes, genres, date de sortie ou « Date TBD », synopsis).
-  S'adapte à 3 cas : dans la Bibliothèque (bloc « Mon suivi » éditable — statut, note,
+- **Fiche jeu** : mise en page côte à côte — jaquette entière et nette à gauche (sans rognage,
+  `object-fit: contain`), infos (plateformes, genres, date de sortie ou « Date TBD ») à droite,
+  synopsis en dessous. S'adapte à 3 cas : dans la Bibliothèque (bloc « Mon suivi » éditable — statut, note,
   commentaire, sauvegarde automatique, retrait avec confirmation), uniquement en wishlist
   (bloc « Dans ta wishlist » avec countdown + retirer/ajouter à la bibliothèque), ou ni l'un ni
   l'autre (cas non atteignable actuellement). Ajouter à la Bibliothèque un jeu wishlisté retire
@@ -174,11 +176,20 @@ l'utilisateur avant tout code (voir prochaine conversation) :
   la plateforme de complétion, rejouer un jeu terminé (compteur d'itérations) — modifient tous
   le modèle `LibraryEntry` posé aux chantiers 1-2 ; l'utilisateur a explicitement formulé le
   premier point comme une question ouverte, pas une décision arrêtée.
-- Glissement gauche/droite entre les filtres de statut sur mobile (À faire/En cours/Terminé/
-  Abandonné) — pas de dépendance au modèle de données, mais pas encore fait.
 - Temps de jeu par jeu — explicitement noté par l'utilisateur comme un sujet V2.
-- Fiche jeu (2026-07-30, retour visuel annoté) : passer d'un hero pleine largeur à une mise en
-  page côte à côte — image entière et nette à gauche, infos (titre/plateformes/genres/date) à
-  droite, description conservée en dessous. Actuellement le cover remplit une bannière large
-  courte (`h-56 w-full`, `object-fit: cover`) qui rogne les jaquettes portrait ; à revoir avec
-  ce nouveau layout plutôt qu'en isolation.
+
+### Livraison 5 — Layout Fiche jeu + navigation tactile (2026-07-30)
+- `src/components/Cover.jsx` : nouvelle prop `fit` (`"cover"` par défaut, `"contain"` pour la
+  Fiche jeu) — une jaquette ne peut plus être rognée dans une fiche, elle est montrée entière
+  avec un fond neutre pour combler l'espace si le ratio ne correspond pas exactement.
+- `src/screens/FicheJeu.jsx` : hero pleine largeur remplacé par une mise en page côte à côte
+  (jaquette à gauche en `aspect-[3/4]`, infos à droite), synopsis conservé en dessous.
+- `src/screens/Bibliotheque.jsx` : glissement tactile gauche/droite pour changer de filtre de
+  statut (`touchstart`/`touchend`, seuil de distance + ratio horizontal/vertical pour ne pas
+  interférer avec le scroll vertical).
+- Vérifié : rendu réel de la jaquette de « Koewotayorini SP » (jaquette portrait auparavant
+  rognée, maintenant entière) ; le swipe a été vérifié via des `TouchEvent` synthétiques
+  (l'automatisation du navigateur ne simule que la souris, pas le tactile) — swipe gauche/droite
+  change bien de filtre, un petit mouvement ou un mouvement surtout vertical ne déclenche rien.
+- Prochaine étape : les 4 retours plus profonds ci-dessus restent à cadrer avec l'utilisateur
+  avant tout code (recommandations/onboarding, distinction possession, plateformes, rejouer).

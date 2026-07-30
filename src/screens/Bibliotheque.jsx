@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { listLibraryEntries } from "../lib/library.js";
 import { STATUSES, STATUS_LABELS } from "../lib/library-pure.js";
 import { getGame } from "../lib/igdb.js";
@@ -11,10 +11,33 @@ import { ListIcon, GridIcon } from "../components/icons.jsx";
 const FILTERS = ["tous", ...STATUSES];
 const FILTER_LABELS = { tous: "Tous", ...STATUS_LABELS };
 
+const SWIPE_MIN_DISTANCE = 60;
+
 export default function Bibliotheque({ onOpenGame, onNavigate }) {
   const [view, setView] = useState("grille");
   const [filter, setFilter] = useState("tous");
   const [items, setItems] = useState(null);
+  const touchStart = useRef(null);
+
+  function handleTouchStart(e) {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY };
+  }
+
+  function handleTouchEnd(e) {
+    if (!touchStart.current) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStart.current.x;
+    const dy = t.clientY - touchStart.current.y;
+    touchStart.current = null;
+    if (Math.abs(dx) < SWIPE_MIN_DISTANCE || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const index = FILTERS.indexOf(filter);
+    if (dx < 0 && index < FILTERS.length - 1) {
+      setFilter(FILTERS[index + 1]);
+    } else if (dx > 0 && index > 0) {
+      setFilter(FILTERS[index - 1]);
+    }
+  }
 
   const reload = useCallback(async () => {
     const entries = await listLibraryEntries({ status: filter });
@@ -63,54 +86,56 @@ export default function Bibliotheque({ onOpenGame, onNavigate }) {
         </div>
       </div>
 
-      {items && items.length === 0 && (
-        <div className="px-4">
-          <p className="text-sm text-faint">Ta bibliothèque est vide pour l'instant.</p>
-          <button className="btn-primary mt-3 px-4 py-2 text-sm" onClick={() => onNavigate("decouvrir")}>
-            Ajouter un jeu
-          </button>
-        </div>
-      )}
+      <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+        {items && items.length === 0 && (
+          <div className="px-4">
+            <p className="text-sm text-faint">Ta bibliothèque est vide pour l'instant.</p>
+            <button className="btn-primary mt-3 px-4 py-2 text-sm" onClick={() => onNavigate("decouvrir")}>
+              Ajouter un jeu
+            </button>
+          </div>
+        )}
 
-      {items && items.length > 0 && view === "grille" && (
-        <div className="grid grid-cols-3 gap-2.5 px-4">
-          {items.map(({ entry, game }) => (
-            <figure
-              key={entry.igdbId}
-              className="relative m-0 cursor-pointer"
-              onClick={() => onOpenGame(entry.igdbId)}
-            >
-              <span className={`pill pill-${entry.status} absolute left-1.5 top-1.5 z-10`}>
-                {STATUS_LABELS[entry.status]}
-              </span>
-              <Cover title={game?.title} coverUrl={game?.coverUrl} className="aspect-[3/4] w-full" />
-              <figcaption className="mt-1.5 text-xs font-semibold leading-tight">{game?.title}</figcaption>
-            </figure>
-          ))}
-        </div>
-      )}
+        {items && items.length > 0 && view === "grille" && (
+          <div className="grid grid-cols-3 gap-2.5 px-4">
+            {items.map(({ entry, game }) => (
+              <figure
+                key={entry.igdbId}
+                className="relative m-0 cursor-pointer"
+                onClick={() => onOpenGame(entry.igdbId)}
+              >
+                <span className={`pill pill-${entry.status} absolute left-1.5 top-1.5 z-10`}>
+                  {STATUS_LABELS[entry.status]}
+                </span>
+                <Cover title={game?.title} coverUrl={game?.coverUrl} className="aspect-[3/4] w-full" />
+                <figcaption className="mt-1.5 text-xs font-semibold leading-tight">{game?.title}</figcaption>
+              </figure>
+            ))}
+          </div>
+        )}
 
-      {items && items.length > 0 && view === "liste" && (
-        <ul className="flex flex-col gap-2 px-4">
-          {items.map(({ entry, game }) => (
-            <li
-              key={entry.igdbId}
-              className="glass glass-interactive flex cursor-pointer items-center gap-3 rounded-3xl p-3"
-              onClick={() => onOpenGame(entry.igdbId)}
-            >
-              <Cover title={game?.title} coverUrl={game?.coverUrl} className="h-14 w-14" />
-              <div className="min-w-0 flex-1">
-                <h3 className="truncate text-sm font-semibold">{game?.title}</h3>
-                <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                  {game?.platforms?.[0] && <span className="plat">{game.platforms[0]}</span>}
-                  <StatusPill status={entry.status} />
-                  <Stars rating={entry.rating} />
+        {items && items.length > 0 && view === "liste" && (
+          <ul className="flex flex-col gap-2 px-4">
+            {items.map(({ entry, game }) => (
+              <li
+                key={entry.igdbId}
+                className="glass glass-interactive flex cursor-pointer items-center gap-3 rounded-3xl p-3"
+                onClick={() => onOpenGame(entry.igdbId)}
+              >
+                <Cover title={game?.title} coverUrl={game?.coverUrl} className="h-14 w-14" />
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate text-sm font-semibold">{game?.title}</h3>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    {game?.platforms?.[0] && <span className="plat">{game.platforms[0]}</span>}
+                    <StatusPill status={entry.status} />
+                    <Stars rating={entry.rating} />
+                  </div>
                 </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </>
   );
 }
