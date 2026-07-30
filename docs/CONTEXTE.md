@@ -9,8 +9,10 @@ finit par coder d'après une description qui ne correspond plus à rien.
 
 ## ⭐ CE QUE FAIT L'APP AUJOURD'HUI
 
-Rien n'est encore codé. Le dépôt contient uniquement le cadrage (rôles, stack, design system)
-et va recevoir une maquette HTML de validation avant la première ligne de code d'app.
+Rien n'est encore codé. Le dépôt contient le cadrage (rôles, stack, design system), une
+maquette HTML validée des 4 écrans principaux, et le cahier des charges du premier chantier
+(Bibliothèque + Découvrir/recherche + Fiche jeu — voir
+[CAHIER-DES-CHARGES-bibliotheque.md](CAHIER-DES-CHARGES-bibliotheque.md)), prêt à être codé.
 
 **Périmètre MVP décidé** (pas encore construit) :
 - Une **bibliothèque personnelle** de jeux avec 4 statuts : backlog / en cours / terminé /
@@ -38,6 +40,13 @@ et va recevoir une maquette HTML de validation avant la première ligne de code 
 - Décisions prises : voir tableau ci-dessus.
 - Créé : [CLAUDE.md](../CLAUDE.md) (rôles, stack, structure, règles critiques), ce fichier.
 - Dépôt git initialisé (pas de remote configuré).
-- Prochaine étape : maquette HTML autonome des 4 écrans principaux (Bibliothèque, À venir,
-  Découvrir, Profil), avec variante liste/grille pour la Bibliothèque — à valider avant
-  d'écrire le premier cahier des charges.
+- Maquette HTML des 4 écrans principaux construite et **validée** : vue Grille retenue par
+  défaut pour la Bibliothèque (jaquette = repère visuel le plus rapide), palette indigo/ambre
+  validée telle quelle. Fichier : [mockups/ecrans-principaux.html](../mockups/ecrans-principaux.html).
+- Cahier des charges du chantier 1 rédigé :
+  [CAHIER-DES-CHARGES-bibliotheque.md](CAHIER-DES-CHARGES-bibliotheque.md) (Bibliothèque,
+  recherche IGDB dans Découvrir, Fiche jeu — le cycle recherche → ajout → suivi → persistance).
+  À venir et Profil sont explicitement hors périmètre de ce premier chantier.
+- Prochaine étape : coder le chantier 1 (scaffolding Vite/React/Tailwind + proxy IGDB +
+  IndexedDB + les 3 écrans du cahier des charges), puis en apporter la preuve (capture d'écran
+  + recette cochée).
