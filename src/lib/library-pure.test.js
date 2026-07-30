@@ -6,6 +6,7 @@ import {
   sortByAddedAtDesc,
   placeholderCoverGradient,
   isCacheFresh,
+  formatFreshness,
 } from "./library-pure.js";
 
 test("ratingToStars renvoie null si aucune note", () => {
@@ -58,4 +59,16 @@ test("isCacheFresh compare au TTL", () => {
   const now = Date.now();
   assert.equal(isCacheFresh(now, 1000), true);
   assert.equal(isCacheFresh(now - 5000, 1000), false);
+});
+
+test("formatFreshness renvoie null sans timestamp", () => {
+  assert.equal(formatFreshness(null), null);
+});
+
+test("formatFreshness humanise minutes / heures / jours", () => {
+  const now = Date.now();
+  assert.equal(formatFreshness(now - 10_000, now), "à l'instant");
+  assert.equal(formatFreshness(now - 5 * 60_000, now), "il y a 5 min");
+  assert.equal(formatFreshness(now - 3 * 60 * 60_000, now), "il y a 3 h");
+  assert.equal(formatFreshness(now - 2 * 24 * 60 * 60_000, now), "il y a 2 j");
 });

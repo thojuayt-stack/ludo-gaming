@@ -24,15 +24,30 @@ le 2026-07-30, voir [CAHIER-DES-CHARGES-bibliotheque.md](CAHIER-DES-CHARGES-bibl
   après rechargement complet de la page. Le catalogue IGDB passe uniquement par le proxy
   serverless `api/igdb/*` (liste blanche stricte) — confirmé sans clé/token visible côté
   navigateur.
-- **À venir** et **Profil** sont des écrans placeholder (« Bientôt disponible ») — hors périmètre
-  du chantier 1, prévus pour les chantiers suivants.
+Le chantier 2 est codé et vérifié en conditions réelles (recette cochée le 2026-07-30, voir
+[CAHIER-DES-CHARGES-a-venir.md](CAHIER-DES-CHARGES-a-venir.md)) :
+
+- **À venir** : wishlist groupée par échéance (Sorti / Aujourd'hui / Cette semaine / Ce mois-ci
+  / Plus tard, calculée en jours glissants), countdown adapté (jours si ≤60j, mois/année
+  au-delà, « Date TBD » sinon), indicateur de fraîcheur des dates + bouton Actualiser (force le
+  rafraîchissement IGDB de toute la wishlist), retrait avec confirmation directement depuis la
+  liste, état vide avec message d'invitation.
+- **Découvrir** : un second bouton (icône marque-page) permet d'ajouter un jeu **pas encore
+  sorti** à la wishlist, en plus du bouton d'ajout à la bibliothèque existant. Un jeu déjà en
+  wishlist affiche « Dans ta wishlist » ; un jeu déjà sorti n'a pas de bouton wishlist.
+- **Fiche jeu** s'adapte à 3 cas : dans la Bibliothèque (bloc « Mon suivi » inchangé),
+  uniquement en wishlist (bloc « Dans ta wishlist » avec countdown + retirer/ajouter à la
+  bibliothèque), ou ni l'un ni l'autre (cas non atteignable actuellement).
+- Ajouter à la Bibliothèque un jeu qui était en wishlist la retire automatiquement de celle-ci
+  (un jeu qu'on suit n'a plus de sens dans une liste d'attente).
+- **Profil** reste un écran placeholder (« Bientôt disponible ») — seul chantier restant du
+  périmètre MVP initial.
 
 **Comment lancer l'app en local** : `npm run dev` (Vite, port 5173) **et**, dans un autre
 terminal, `vercel dev --listen 3000` (proxy IGDB, nécessite `.env.local` avec
 `TWITCH_CLIENT_ID`/`TWITCH_CLIENT_SECRET` — voir la section Twitch du cahier des charges).
 
 **Périmètre MVP restant à construire** :
-- La **wishlist « À venir »** groupée par échéance (Aujourd'hui / Cette semaine / Plus tard).
 - L'onglet **Profil** : statistiques, thème clair/sombre, export JSON.
 - **Aucun compte, aucune base en ligne, aucun social** pour le MVP (prévu V2).
 
@@ -86,3 +101,24 @@ terminal, `vercel dev --listen 3000` (proxy IGDB, nécessite `.env.local` avec
   bibliothèque (voir cahier des charges, section recette).
 - Prochaine étape : chantier 2 (À venir — wishlist groupée par échéance) ou chantier 3
   (Profil — stats, thème, export), à trancher avec l'utilisateur.
+
+### Livraison 2 — Chantier À venir / wishlist (2026-07-30)
+- Cahier des charges rédigé et validé :
+  [CAHIER-DES-CHARGES-a-venir.md](CAHIER-DES-CHARGES-a-venir.md).
+- Nouvelle base `WishlistEntry` (`src/lib/db.js`), logique pure de regroupement/tri/countdown
+  dans `src/lib/wishlist-pure.js` (12 tests, `wishlist-pure.test.js`, seuils en jours glissants
+  plutôt qu'en mois calendaire pour éviter qu'un jeu change de groupe sans raison apparente),
+  CRUD dans `src/lib/wishlist.js`.
+- `src/lib/library.js` : `addToLibrary` retire désormais automatiquement l'entrée wishlist du
+  même jeu s'il y en avait une.
+- Écran `src/screens/Avenir.jsx` codé (remplace le placeholder), `FicheJeu.jsx` étendu pour
+  gérer un jeu wishlist-only, `Decouvrir.jsx` : second bouton d'ajout à la wishlist conditionné
+  à la non-sortie du jeu. Nouveaux composants `Countdown.jsx`, icônes `BookmarkIcon`/`RefreshIcon`.
+- Recette entièrement vérifiée en conditions réelles (voir le cahier des charges pour le
+  détail) : bouton wishlist conditionnel, anti-doublon, retrait auto lors d'un ajout à la
+  Bibliothèque, retrait avec confirmation, Actualiser, état vide, Fiche jeu à 3 cas.
+- Non testé en conditions réelles (couvert uniquement par les bancs d'essai) : le groupe
+  « Sorti » et les seuils Aujourd'hui/Cette semaine/Ce mois-ci, faute de jeux réels avec ces
+  dates au moment du test.
+- Prochaine étape : chantier 3 (Profil — statistiques, thème clair/sombre, export JSON), seul
+  chantier restant du périmètre MVP initial.

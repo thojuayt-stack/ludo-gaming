@@ -5,6 +5,7 @@ import { createStore, get, set, del, values } from "idb-keyval";
 // createStore(sameDbName, otherStore) ne créerait jamais son object store.
 const gameCacheStore = createStore("ludotheque-game-cache", "entries");
 const libraryStore = createStore("ludotheque-library", "entries");
+const wishlistStore = createStore("ludotheque-wishlist", "entries");
 
 export const gameCacheDb = {
   get: (igdbId) => get(igdbId, gameCacheStore),
@@ -16,4 +17,11 @@ export const libraryDb = {
   set: (igdbId, value) => set(igdbId, value, libraryStore),
   del: (igdbId) => del(igdbId, libraryStore),
   values: () => values(libraryStore),
+};
+
+export const wishlistDb = {
+  get: (igdbId) => get(igdbId, wishlistStore),
+  set: (igdbId, value) => set(igdbId, value, wishlistStore),
+  del: (igdbId) => del(igdbId, wishlistStore),
+  values: () => values(wishlistStore),
 };

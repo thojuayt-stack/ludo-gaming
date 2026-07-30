@@ -54,6 +54,23 @@ export function CompassIcon() {
   );
 }
 
+export function BookmarkIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 3.5h12v17l-6-4-6 4v-17Z" />
+    </svg>
+  );
+}
+
+export function RefreshIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12a9 9 0 1 1-2.6-6.36" />
+      <path d="M21 4v6h-6" />
+    </svg>
+  );
+}
+
 export function UserIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">

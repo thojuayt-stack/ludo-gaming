@@ -61,3 +61,15 @@ export function isCacheFresh(cachedAt, ttlMs) {
   if (cachedAt == null) return false;
   return Date.now() - cachedAt < ttlMs;
 }
+
+/** "il y a 2h" pour l'indicateur de fraîcheur des dates (écran À venir). */
+export function formatFreshness(cachedAt, now = Date.now()) {
+  if (cachedAt == null) return null;
+  const minutes = Math.floor((now - cachedAt) / 60000);
+  if (minutes < 1) return "à l'instant";
+  if (minutes < 60) return `il y a ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `il y a ${hours} h`;
+  const days = Math.floor(hours / 24);
+  return `il y a ${days} j`;
+}

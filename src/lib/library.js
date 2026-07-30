@@ -1,5 +1,6 @@
 import { libraryDb } from "./db.js";
 import { filterByStatus, sortByAddedAtDesc } from "./library-pure.js";
+import { removeFromWishlist } from "./wishlist.js";
 
 export { STATUSES, STATUS_LABELS, ratingToStars, placeholderCoverGradient } from "./library-pure.js";
 
@@ -15,6 +16,8 @@ export async function addToLibrary({ igdbId, status = "backlog", rating = null, 
   const now = Date.now();
   const entry = { igdbId, status, rating, comment, addedAt: now, updatedAt: now };
   await libraryDb.set(igdbId, entry);
+  // Un jeu qu'on possède et suit n'a plus de sens dans une liste d'attente.
+  await removeFromWishlist(igdbId);
   return entry;
 }
 
