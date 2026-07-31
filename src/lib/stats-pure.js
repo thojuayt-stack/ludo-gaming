@@ -39,6 +39,23 @@ export function mostFrequent(listsOfValues) {
   return best.value;
 }
 
+/**
+ * Les n valeurs les plus fréquentes parmi des listes de valeurs, triées par fréquence
+ * décroissante puis alphabétique (même règle de départage que `mostFrequent`).
+ */
+export function topNFrequent(listsOfValues, n) {
+  const counts = new Map();
+  for (const values of listsOfValues) {
+    for (const value of values || []) {
+      counts.set(value, (counts.get(value) || 0) + 1);
+    }
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, n)
+    .map(([value]) => value);
+}
+
 export const DONUT_RADIUS = 42;
 export const DONUT_CIRCUMFERENCE = 2 * Math.PI * DONUT_RADIUS;
 

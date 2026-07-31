@@ -4,6 +4,7 @@ import {
   countByStatus,
   averageRating,
   mostFrequent,
+  topNFrequent,
   donutSegments,
   DONUT_CIRCUMFERENCE,
 } from "./stats-pure.js";
@@ -46,6 +47,21 @@ test("mostFrequent renvoie la valeur la plus fréquente", () => {
 test("mostFrequent départage une égalité par ordre alphabétique", () => {
   const lists = [["Switch"], ["PC"]];
   assert.equal(mostFrequent(lists), "PC");
+});
+
+test("topNFrequent renvoie un tableau vide sans aucune valeur", () => {
+  assert.deepEqual(topNFrequent([], 3), []);
+});
+
+test("topNFrequent trie par fréquence décroissante puis alphabétique, limité à n", () => {
+  const lists = [
+    ["Adventure", "Role-playing (RPG)"],
+    ["Role-playing (RPG)"],
+    ["Shooter"],
+    ["Adventure"],
+  ];
+  assert.deepEqual(topNFrequent(lists, 2), ["Adventure", "Role-playing (RPG)"]);
+  assert.deepEqual(topNFrequent(lists, 1), ["Adventure"]);
 });
 
 test("donutSegments renvoie un tableau vide si tout est à zéro", () => {

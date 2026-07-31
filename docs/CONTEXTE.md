@@ -21,7 +21,18 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   connue ; éditable sinon), statut (si possédé), plateformes possédées (case à cocher,
   optionnel), note/commentaire (si possédé). La recherche reste affichée si on ouvre une fiche
   puis revient en arrière (l'écran actif ne se démonte pas quand une Fiche jeu s'ouvre
-  par-dessus).
+  par-dessus). **Avant toute frappe**, 3 sections de découverte : Tendances de la semaine
+  (popularité IGDB cumulée, `api/igdb/trending.js`), Basé sur tes genres (filtre client sur ce
+  même pool selon les genres les plus fréquents de la bibliothèque, masqué si aucun
+  chevauchement), Parcourir par genre (6 tuiles fixes RPG/Action/Aventure/Stratégie/Indé/Sport,
+  ouvre une liste filtrée avec un chip « Genre : X ✕ »). Les tuiles de ces 3 sections ont un
+  bouton **+** compact qui ajoute directement à la bibliothèque en un tap (statut à faire,
+  possédé) — contrairement au **+** de la recherche classique qui ouvre toujours la Sheet.
+- **Onboarding** : écran plein affiché uniquement à la toute première visite (avant la barre de
+  navigation), détecté via `localStorage` (`onboarding_seen_v1`, jamais réaffiché une fois vu).
+  Texte d'accueil + section « Ajoute ton premier jeu » réutilisant les mêmes tendances que
+  Découvrir (même ajout en un tap). Bouton **Passer** ou **Aller à ma bibliothèque** pour
+  entrer dans l'app normale.
 - **Bibliothèque** : vue Grille par défaut (bascule Liste disponible), filtre par statut
   (Tous/**À faire**/En cours/Terminé/Abandonné — « À faire » est le libellé affiché, la clé
   interne reste `backlog`), navigable aussi par glissement tactile gauche/droite entre les
@@ -274,3 +285,53 @@ des charges (corrections/ajustements UX contenus, sans impact sur le modèle de 
 - Non testé faute de données réelles disponibles au moment de la vérification : une section
   « Disponible » non vide en même temps que « Non disponible » (un seul jeu à faire dans l'app
   actuellement), le badge countdown au format mois/année ou « Date TBD » sur une vraie tuile.
+
+### Livraison 9 — Pastilles de statut : fond sombre unifié (2026-07-30)
+Retouche sans nouveau cahier des charges (correction visuelle, aucun impact sur le modèle de
+données), suite à un retour utilisateur avec capture annotée :
+- Bug signalé : les pastilles de statut (fond translucide `--glass-bg` ou tint à 18%)
+  devenaient illisibles sur une jaquette claire (Marvel's Wolverine) — le fond laissait
+  transparaître la jaquette derrière.
+- Correctif : fond sombre fixe (`rgba(20, 16, 30, 0.72)` + flou), indépendant du thème
+  clair/sombre, identique pour tous les statuts ; seule la couleur du texte varie désormais.
+- Bug de parsing CSS trouvé au passage : un `*/` involontaire au milieu d'un commentaire
+  fermait ce commentaire prématurément et faisait silencieusement disparaître toute la règle
+  `.pill` (aucune erreur visible, juste un fond transparent) — corrigé en reformulant le
+  commentaire.
+- Vérifié en conditions réelles : toutes les pastilles lisibles sur les 4 jeux de la
+  bibliothèque, y compris Wolverine (jaquette claire), en vue grille comme en vue liste.
+
+### Livraison 10 — Onboarding première visite + recommandations Découvrir (2026-07-30)
+- Cahier des charges rédigé et validé :
+  [CAHIER-DES-CHARGES-decouvrir-onboarding.md](CAHIER-DES-CHARGES-decouvrir-onboarding.md),
+  maquette [mockups/decouvrir-recommandations-onboarding.html](../mockups/decouvrir-recommandations-onboarding.html).
+  Cadrage produit préalable : recommandations = tendances générales **et** section genres perso
+  (pas l'un ou l'autre) ; onboarding = texte d'accueil **et** proposition d'ajouter un premier
+  jeu.
+- Nouvelle capacité proxy `api/igdb/trending.js` : tri par popularité cumulée
+  (`total_rating_count`), liste blanche fermée de 6 genres pour « Parcourir par genre » — mapping
+  vers les vrais ids IGDB (12/RPG, 31/Aventure, 15+11+16/Stratégie, 32/Indé, 14/Sport, et un
+  regroupement éditorial 4+5+8+25+33 pour "Action", IGDB n'ayant pas ce genre) vérifié par appel
+  réel à l'API IGDB pendant le cadrage, avant d'écrire le code.
+- `src/lib/igdb.js` (`getTrending`, cache liste en `localStorage` TTL 6h), `src/lib/discover-pure.js`
+  (nouveau : `GENRE_TILES`, `libraryGenres`, `genreBasedRecommendations` — 7 tests),
+  `src/lib/stats-pure.js` (`topNFrequent`, généralisation de `mostFrequent` — 2 tests),
+  `src/lib/onboarding.js` (nouveau : détection première visite via `localStorage`).
+- `src/screens/Decouvrir.jsx` : 3 sections avant frappe (Tendances / Basé sur tes genres /
+  Parcourir par genre), mode « genre » réutilisant le rendu de résultats existant. Nouveau
+  composant partagé `src/components/TrendCard.jsx`. Nouvel écran `src/screens/Onboarding.jsx`,
+  branché dans `App.jsx` avant le shell normal tant que `onboarding_seen_v1` n'est pas posé.
+- **Bug trouvé et corrigé pendant la vérification** : le bouton + compact des tuiles tendance
+  (`.add-dot`) était peint sous la jaquette (pas de `z-index`) — invisible bien que fonctionnel.
+- Recette entièrement vérifiée en conditions réelles (Twitch/IGDB connectés, `vercel dev`) :
+  tendances réelles (GTA V/Witcher 3/Skyrim en tête), genre RPG filtré correctement avec « Déjà
+  suivi » sur un jeu déjà en bibliothèque, ajout en un tap depuis l'onboarding (Portal 2,
+  retrouvé dans Bibliothèque avec le bon statut), onboarding affiché une seule fois. Données de
+  test (Portal 2) retirées après vérification, `onboarding_seen_v1` remis à zéro pour que
+  l'utilisateur voie l'écran par lui-même.
+- **Limite connue, non corrigée** (hors décision de cadrage) : avec une petite bibliothèque aux
+  genres très répandus, « Basé sur tes genres » peut afficher presque les mêmes jeux que
+  « Tendances » (les plus gros titres du pool sont presque tous tagués "Adventure" sur IGDB) —
+  à revisiter si gênant à l'usage.
+- Non vérifié à l'écran (testé uniquement par appel direct au proxy) : les genres Action,
+  Aventure, Stratégie, Indé de « Parcourir par genre » — seuls RPG et Sport cliqués dans l'UI.
