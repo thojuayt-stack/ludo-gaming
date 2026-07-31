@@ -4,6 +4,7 @@ import {
   sortByAddedAtDesc,
   resolveStatusForPossession,
   nextPlayCount,
+  autoFinishedPlatform,
 } from "./library-pure.js";
 
 export {
@@ -13,6 +14,7 @@ export {
   placeholderCoverGradient,
   completionLabel,
   isOwnershipLocked,
+  displayPlatform,
 } from "./library-pure.js";
 
 export async function getLibraryEntry(igdbId) {
@@ -38,7 +40,7 @@ export async function addToLibrary({
     status: resolvedStatus,
     possede,
     platforms,
-    finishedPlatform: [],
+    finishedPlatform: autoFinishedPlatform(null, resolvedStatus, [], platforms),
     playCount: resolvedStatus === "termine" ? 1 : 0,
     rating: possede ? rating : null,
     comment: possede ? comment : "",
@@ -56,9 +58,16 @@ export async function updateLibraryEntry(igdbId, patch) {
   }
   const merged = { ...existing, ...patch };
   const resolvedStatus = resolveStatusForPossession(merged.possede, merged.status);
+  const finishedPlatform = autoFinishedPlatform(
+    existing.status,
+    resolvedStatus,
+    merged.finishedPlatform,
+    merged.platforms,
+  );
   const updated = {
     ...merged,
     status: resolvedStatus,
+    finishedPlatform,
     playCount: nextPlayCount(existing.playCount, existing.status, resolvedStatus),
     updatedAt: Date.now(),
   };

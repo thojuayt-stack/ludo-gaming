@@ -6,6 +6,8 @@ import { daysUntil, isUnreleased } from "../lib/wishlist-pure.js";
 import Cover from "../components/Cover.jsx";
 import Countdown from "../components/Countdown.jsx";
 import AjouterSheet from "../components/AjouterSheet.jsx";
+import StatusFilterBar, { STATUS_ICONS } from "../components/StatusFilterBar.jsx";
+import Toggle from "../components/Toggle.jsx";
 import { ControllerIcon } from "../components/icons.jsx";
 
 const SUMMARY_COLLAPSE_THRESHOLD = 220;
@@ -162,26 +164,12 @@ export default function FicheJeu({ igdbId, onBack }) {
 
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-muted">Je possède ce jeu</span>
-              <div className="segment big flex">
-                <button
-                  type="button"
-                  className="segment-item flex-1"
-                  data-active={!entry.possede}
-                  disabled={locked}
-                  onClick={() => handlePossedeChange(false)}
-                >
-                  Non
-                </button>
-                <button
-                  type="button"
-                  className="segment-item flex-1"
-                  data-active={entry.possede}
-                  disabled={locked}
-                  onClick={() => handlePossedeChange(true)}
-                >
-                  Oui
-                </button>
-              </div>
+              <Toggle
+                checked={entry.possede}
+                onChange={handlePossedeChange}
+                disabled={locked}
+                ariaLabel="Je possède ce jeu"
+              />
               {locked && (
                 <span className="text-xs text-faint">
                   Pas encore sorti — tu pourras le marquer possédé une fois disponible.
@@ -190,19 +178,13 @@ export default function FicheJeu({ igdbId, onBack }) {
             </label>
 
             {entry.possede && (
-              <div className="segment big flex">
-                {STATUSES.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    className="segment-item flex-1"
-                    data-active={entry.status === s}
-                    onClick={() => handleStatusChange(s)}
-                  >
-                    {STATUS_LABELS[s]}
-                  </button>
-                ))}
-              </div>
+              <StatusFilterBar
+                filters={STATUSES}
+                active={entry.status}
+                labels={STATUS_LABELS}
+                icons={STATUS_ICONS}
+                onChange={handleStatusChange}
+              />
             )}
 
             {game.platforms.length > 0 && (

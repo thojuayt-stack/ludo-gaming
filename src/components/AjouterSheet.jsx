@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Sheet from "./Sheet.jsx";
+import Toggle from "./Toggle.jsx";
 import { STATUSES, STATUS_LABELS, isOwnershipLocked } from "../lib/library-pure.js";
 import { addToLibrary } from "../lib/library.js";
 
@@ -38,26 +39,7 @@ export default function AjouterSheet({ game, onClose, onAdded }) {
       <form className="flex flex-col gap-4 p-4" onSubmit={handleSubmit}>
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-muted">Je possède ce jeu</span>
-          <div className="segment flex">
-            <button
-              type="button"
-              className="segment-item flex-1"
-              data-active={!possede}
-              disabled={locked}
-              onClick={() => setPossede(false)}
-            >
-              Non
-            </button>
-            <button
-              type="button"
-              className="segment-item flex-1"
-              data-active={possede}
-              disabled={locked}
-              onClick={() => setPossede(true)}
-            >
-              Oui
-            </button>
-          </div>
+          <Toggle checked={possede} onChange={setPossede} disabled={locked} ariaLabel="Je possède ce jeu" />
           {locked && (
             <span className="text-xs text-faint">
               Pas encore sorti — tu pourras le marquer possédé une fois disponible.

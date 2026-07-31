@@ -53,6 +53,26 @@ export function statusPillLabel(status, possede, playCount) {
   return status === "termine" ? completionLabel(playCount) : STATUS_LABELS[status];
 }
 
+/**
+ * Présélectionne l'unique plateforme possédée comme plateforme de complétion, mais seulement
+ * au moment où le jeu bascule vers "terminé" (pas à chaque update) — pour ne pas re-remplir un
+ * champ que l'utilisateur aurait ensuite vidé volontairement.
+ */
+export function autoFinishedPlatform(previousStatus, nextStatus, currentFinishedPlatform, ownedPlatforms) {
+  const becomesFinished = nextStatus === "termine" && previousStatus !== "termine";
+  if (becomesFinished && !(currentFinishedPlatform?.length) && ownedPlatforms?.length === 1) {
+    return [ownedPlatforms[0]];
+  }
+  return currentFinishedPlatform ?? [];
+}
+
+/** Plateforme affichée sur une tuile Bibliothèque : celle réellement possédée en priorité,
+ * celle du catalogue IGDB seulement si aucune n'a été renseignée. */
+export function displayPlatform(entryPlatforms, gamePlatforms) {
+  if (entryPlatforms?.length) return entryPlatforms[0];
+  return gamePlatforms?.[0] ?? null;
+}
+
 /** On ne peut pas posséder un jeu dont la date de sortie est future et connue. */
 export function isOwnershipLocked(releaseDate, now = Date.now()) {
   return releaseDate != null && releaseDate > now;

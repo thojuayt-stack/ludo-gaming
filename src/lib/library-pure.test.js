@@ -13,6 +13,8 @@ import {
   statusPillLabel,
   isOwnershipLocked,
   splitBacklogByAvailability,
+  autoFinishedPlatform,
+  displayPlatform,
 } from "./library-pure.js";
 
 test("ratingToStars renvoie null si aucune note", () => {
@@ -145,4 +147,40 @@ test("splitBacklogByAvailability gère un item sans game (fiche pas encore charg
   const { disponible, nonDisponible } = splitBacklogByAvailability(items);
   assert.equal(disponible.length, 0);
   assert.equal(nonDisponible.length, 1); // pas de date connue -> traité comme pas encore sorti
+});
+
+test("autoFinishedPlatform présélectionne l'unique plateforme possédée en entrant dans 'terminé'", () => {
+  assert.deepEqual(autoFinishedPlatform("en_cours", "termine", [], ["PS5"]), ["PS5"]);
+  assert.deepEqual(autoFinishedPlatform("en_cours", "termine", undefined, ["PS5"]), ["PS5"]);
+});
+
+test("autoFinishedPlatform ne présélectionne rien si plusieurs plateformes possédées", () => {
+  assert.deepEqual(autoFinishedPlatform("en_cours", "termine", [], ["PS5", "PC"]), []);
+});
+
+test("autoFinishedPlatform ne touche pas une sélection déjà faite", () => {
+  assert.deepEqual(autoFinishedPlatform("en_cours", "termine", ["PC"], ["PS5"]), ["PC"]);
+});
+
+test("autoFinishedPlatform n'agit qu'à la transition vers 'terminé', jamais en restant dedans", () => {
+  // L'utilisateur a vidé volontairement le champ : rester à "terminé" ne doit pas le re-remplir.
+  assert.deepEqual(autoFinishedPlatform("termine", "termine", [], ["PS5"]), []);
+});
+
+test("autoFinishedPlatform ne fait rien en sortant de 'terminé'", () => {
+  assert.deepEqual(autoFinishedPlatform("termine", "en_cours", ["PS5"], ["PS5"]), ["PS5"]);
+});
+
+test("displayPlatform priorise la plateforme possédée sur celle du catalogue", () => {
+  assert.equal(displayPlatform(["PS5"], ["PS5", "PC", "Xbox"]), "PS5");
+});
+
+test("displayPlatform retombe sur la plateforme du catalogue si aucune n'est possédée", () => {
+  assert.equal(displayPlatform([], ["PS5", "PC"]), "PS5");
+  assert.equal(displayPlatform(undefined, ["PS5"]), "PS5");
+});
+
+test("displayPlatform renvoie null si aucune plateforme n'est connue", () => {
+  assert.equal(displayPlatform([], []), null);
+  assert.equal(displayPlatform(undefined, undefined), null);
 });

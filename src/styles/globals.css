@@ -268,7 +268,7 @@ textarea.field { resize: vertical; }
   position: absolute;
   top: 0;
   left: 0;
-  width: 20%;
+  width: calc(100% / var(--filter-count, 5));
   height: 100%;
   border-radius: 9999px;
   background: var(--accent);
@@ -383,6 +383,60 @@ button.chip[data-active="true"] {
 
 .segment.big { padding: 4px; }
 .segment.big .segment-item { padding: 0.8rem 0.6rem; font-size: 0.9rem; }
+
+/*
+ * Interrupteur à bascule (Fiche jeu, "Je possède ce jeu") — un seul bouton avec une pastille qui
+ * glisse, au lieu de deux boutons "Non"/"Oui" côte à côte. Le libellé du côté opposé à la
+ * pastille (comme un vrai switch iOS/Android à texte), pas centré, pour ne jamais se faire
+ * recouvrir par la pastille pendant la transition.
+ */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 6rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.toggle-switch[data-active="true"] { background: var(--accent); border-color: var(--accent); }
+.toggle-switch:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.toggle-switch .toggle-track {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  justify-content: flex-end;
+}
+.toggle-switch[data-active="true"] .toggle-track { justify-content: flex-start; }
+
+.toggle-switch .toggle-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+  transition: color 0.2s ease;
+}
+.toggle-switch[data-active="true"] .toggle-label { color: var(--accent-ink); }
+
+.toggle-switch .toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(2.5rem - 8px);
+  height: calc(2.5rem - 8px);
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.toggle-switch[data-active="true"] .toggle-knob { transform: translateX(calc(6rem - 2.5rem)); }
 
 .meta-row { display: flex; align-items: center; gap: 0.7rem; font-size: 0.86rem; font-weight: 600; color: var(--foreground); }
 .meta-row .ic {

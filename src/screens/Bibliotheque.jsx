@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { listLibraryEntries } from "../lib/library.js";
-import { STATUSES, STATUS_LABELS, statusPillLabel, splitBacklogByAvailability } from "../lib/library-pure.js";
+import { STATUSES, STATUS_LABELS, statusPillLabel, splitBacklogByAvailability, displayPlatform } from "../lib/library-pure.js";
 import { daysUntil } from "../lib/wishlist-pure.js";
 import { getGame } from "../lib/igdb.js";
 import PageHeader from "../components/PageHeader.jsx";
@@ -8,67 +8,17 @@ import Cover from "../components/Cover.jsx";
 import StatusPill from "../components/StatusPill.jsx";
 import Stars from "../components/Stars.jsx";
 import Countdown from "../components/Countdown.jsx";
-import { ListIcon, GridIcon, CircleIcon, PlayCircleIcon, CheckIcon, XIcon } from "../components/icons.jsx";
+import StatusFilterBar, { STATUS_ICONS } from "../components/StatusFilterBar.jsx";
+import { ListIcon, GridIcon } from "../components/icons.jsx";
 
 const FILTERS = ["tous", ...STATUSES];
 const FILTER_LABELS = { tous: "Tous", ...STATUS_LABELS };
-const FILTER_ICONS = {
-  tous: GridIcon,
-  backlog: CircleIcon,
-  en_cours: PlayCircleIcon,
-  termine: CheckIcon,
-  abandonne: XIcon,
-};
+const FILTER_ICONS = { tous: GridIcon, ...STATUS_ICONS };
 
 const SWIPE_MIN_DISTANCE = 60;
 
-/**
- * Filtre de statut : sélecteur qui glisse en CSS pur (translateX en %, relatif à sa propre
- * largeur = 1/5 du conteneur — aucune mesure de layout, donc intrinsèquement responsive).
- * Seul l'actif affiche son libellé ; l'icône d'un item qui se désélectionne descend se centrer
- * verticalement dans la tuile (et remonte quand il redevient actif) via --icon-shift, mesuré
- * une fois au montage à partir de la hauteur réelle du label + du gap.
- */
-function StatusFilterBar({ filters, active, labels, icons, onChange }) {
-  const barRef = useRef(null);
-  const labelRef = useRef(null);
-  const activeIndex = filters.indexOf(active);
-
-  useLayoutEffect(() => {
-    const bar = barRef.current;
-    const label = labelRef.current;
-    if (!bar || !label) return;
-    const gap = parseFloat(getComputedStyle(bar.querySelector(".status-filter-item")).rowGap || "0");
-    const shift = (gap + label.getBoundingClientRect().height) / 2;
-    bar.style.setProperty("--icon-shift", `${shift}px`);
-  }, []);
-
-  return (
-    <div className="status-filter" ref={barRef}>
-      <div className="status-filter-indicator" style={{ transform: `translateX(${activeIndex * 100}%)` }} />
-      {filters.map((f) => {
-        const Icon = icons[f];
-        const isActive = f === active;
-        return (
-          <button
-            key={f}
-            type="button"
-            className="status-filter-item"
-            data-active={isActive}
-            onClick={() => onChange(f)}
-            aria-pressed={isActive}
-            aria-label={labels[f]}
-          >
-            <span className="icon-wrap"><Icon /></span>
-            <span className="label" ref={f === filters[0] ? labelRef : undefined}>{labels[f]}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 function GameGridTile({ entry, game, onOpen, showCountdown }) {
+  const platform = displayPlatform(entry.platforms, game?.platforms);
   return (
     <figure className="relative isolate m-0 cursor-pointer" onClick={() => onOpen(entry.igdbId)}>
       {showCountdown ? (
@@ -82,12 +32,13 @@ function GameGridTile({ entry, game, onOpen, showCountdown }) {
       )}
       <Cover title={game?.title} coverUrl={game?.coverUrl} className="aspect-[3/4] w-full shadow-lg" />
       <figcaption className="mt-2 text-sm font-bold leading-tight tracking-tight">{game?.title}</figcaption>
-      {game?.platforms?.[0] && <p className="mt-0.5 text-xs font-semibold text-faint">{game.platforms[0]}</p>}
+      {platform && <p className="mt-0.5 text-xs font-semibold text-faint">{platform}</p>}
     </figure>
   );
 }
 
 function GameListRow({ entry, game, onOpen, showCountdown }) {
+  const platform = displayPlatform(entry.platforms, game?.platforms);
   return (
     <li
       className="glass glass-interactive flex cursor-pointer items-center gap-3 rounded-3xl p-3"
@@ -97,7 +48,7 @@ function GameListRow({ entry, game, onOpen, showCountdown }) {
       <div className="min-w-0 flex-1">
         <h3 className="truncate text-sm font-semibold">{game?.title}</h3>
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          {game?.platforms?.[0] && <span className="plat">{game.platforms[0]}</span>}
+          {platform && <span className="plat">{platform}</span>}
           {!showCountdown && (
             <>
               <StatusPill status={entry.status} possede={entry.possede} playCount={entry.playCount} />

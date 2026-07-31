@@ -34,7 +34,8 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   Découvrir (même ajout en un tap). Bouton **Passer** ou **Aller à ma bibliothèque** pour
   entrer dans l'app normale.
 - **Bibliothèque** : vue Grille par défaut, **2 colonnes** (jaquettes larges, style inspiré de
-  l'app PlayStation — titre en gras et 1ʳᵉ plateforme sous chaque tuile), bascule Liste
+  l'app PlayStation — titre en gras et **plateforme possédée** sous chaque tuile, celle du
+  catalogue IGDB seulement si aucune n'est cochée), bascule Liste
   disponible (inchangée, compacte), filtre par statut
   (Tous/**À faire**/En cours/Terminé/Abandonné — « À faire » est le libellé affiché, la clé
   interne reste `backlog`) avec une icône par statut ; seul l'actif affiche son libellé (fondu
@@ -60,12 +61,15 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   nette à gauche (sans rognage, `object-fit: contain`), infos à droite : titre en gras, date de
   sortie en sous-titre, genres en tags ; plateformes du jeu en ligne icône + texte sous le hero.
   Synopsis en dessous. Bloc « Mon suivi » unique (2 cas : le jeu est dans la bibliothèque, ou pas
-  encore ajouté), habillage inspiré de l'app PlayStation (boutons de possession/statut et puces
-  de plateformes agrandis) avec toggle possession, statut (si possédé), plateformes possédées,
+  encore ajouté), habillage inspiré de l'app PlayStation (puces de plateformes agrandies) avec
+  toggle possession (**interrupteur à un seul bouton**, pastille glissante, composant `Toggle`
+  partagé), statut (si possédé — même sélecteur glissant à icônes que le filtre de la
+  Bibliothèque, `StatusFilterBar` partagé), plateformes possédées,
   plateforme(s) de complétion (**plusieurs possibles**, pastilles à cocher comme les plateformes
-  possédées) + compteur « Terminé ×N » + bouton **Recommencer** (si terminé), note/commentaire
-  (si possédé, jamais effacés si on décoche possession — juste masqués), retrait avec
-  confirmation.
+  possédées, **présélectionnée automatiquement si une seule plateforme est possédée** au moment
+  où le jeu passe à « Terminé », sans revenir si l'utilisateur la décoche ensuite) + compteur
+  « Terminé ×N » + bouton **Recommencer** (si terminé), note/commentaire (si possédé, jamais
+  effacés si on décoche possession — juste masqués), retrait avec confirmation.
 - **Profil** : donut + 4 tuiles de statistiques calculées localement (jeux terminés, plateforme
   et genre les plus fréquents — la plateforme utilise en priorité celles cochées comme
   possédées, note moyenne — « — » si rien à calculer plutôt qu'un NaN), réglage d'apparence
@@ -509,3 +513,46 @@ annotée), validée puis codée pour de vrai.
   (testé avec « En cours »), alignement vertical pixel-parfait mesuré dans le vrai DOM (pas
   seulement en maquette), aucune erreur console, `npm test` toujours à 57/57 (aucune logique
   pure touchée).
+
+### Livraison 19 — Retours Fiche jeu / Bibliothèque : plateforme de complétion, plateforme affichée, filtre de statut (2026-07-31)
+Retouches sans nouveau cahier des charges (corrections/cohérence, réutilisent des interactions
+déjà validées), suite à trois retours utilisateur sur une même capture annotée :
+- **Bug** : la tuile Bibliothèque affichait `game.platforms[0]` (1ère plateforme du catalogue
+  IGDB) au lieu de la plateforme réellement possédée par l'utilisateur. Nouvelle fonction pure
+  `displayPlatform(entryPlatforms, gamePlatforms)` (`library-pure.js`, 3 tests) : priorise la
+  1ère plateforme cochée dans « Plateformes possédées », ne retombe sur celle du catalogue que si
+  aucune n'est cochée. Utilisée dans `GameGridTile` et `GameListRow` (`Bibliotheque.jsx`).
+- **Présélection de la plateforme de complétion** : quand un jeu n'est possédé que sur une seule
+  plateforme, cocher « Terminé » présélectionne automatiquement cette plateforme dans « Terminé
+  sur quelle(s) plateforme(s) ? » (jusqu'ici toujours vide par défaut). Nouvelle fonction pure
+  `autoFinishedPlatform(previousStatus, nextStatus, currentFinishedPlatform, ownedPlatforms)`
+  (`library-pure.js`, 5 tests) : n'agit qu'à la transition vers "terminé" (pas à chaque update),
+  pour ne pas re-remplir un champ que l'utilisateur aurait ensuite vidé volontairement. Branchée
+  dans `updateLibraryEntry` et `addToLibrary` (`library.js`), donc valable aussi bien depuis la
+  Fiche jeu que depuis un ajout direct en statut "terminé".
+- **Filtre de statut de la Fiche jeu unifié avec celui de la Bibliothèque** : le bloc « Mon
+  suivi » utilisait encore un `.segment.big` (texte seul, changement instantané) pour le choix de
+  statut, différent du sélecteur glissant à icônes de la Bibliothèque. `StatusFilterBar`
+  (Livraison 18) extrait de `Bibliotheque.jsx` vers `src/components/StatusFilterBar.jsx`
+  (réutilisé tel quel par les deux écrans, plus de duplication), `STATUS_ICONS` exporté à côté
+  pour être partagé. `.status-filter-indicator` : largeur `20%` fixe remplacée par
+  `calc(100% / var(--filter-count, 5))` pour rester correcte avec 4 items (Fiche jeu) comme avec
+  5 (Bibliothèque, « Tous » inclus), sans dupliquer la classe.
+- `npm test` → 65 tests (57 + 8 nouveaux : 3 `displayPlatform`, 5 `autoFinishedPlatform`), tous
+  verts.
+- **Toggle « Je possède ce jeu » à un seul bouton** : remplaçait un segment à deux boutons
+  (« Non » / « Oui ») par un interrupteur à bascule unique (pastille qui glisse, libellé du côté
+  opposé à la pastille), sur référence visuelle fournie par l'utilisateur. Nouveau composant
+  générique `src/components/Toggle.jsx` (`checked`/`onChange`/`labelOn`/`labelOff`/`disabled`),
+  nouvelles classes CSS `.toggle-switch`/`.toggle-track`/`.toggle-label`/`.toggle-knob`
+  (`globals.css`), utilisé sur la Fiche jeu **et** la Sheet d'ajout (`AjouterSheet.jsx`) pour
+  une même question "Je possède ce jeu" traitée de façon cohérente aux deux endroits.
+- Vérifié en conditions réelles (données de test créées puis retirées, aucune donnée de
+  l'utilisateur touchée) : jeu possédé sur PC seulement avec catalogue PS5/PC/Xbox → tuile
+  Bibliothèque affiche bien « PC » ; passage à « Terminé » sur la Fiche jeu présélectionne PC ;
+  décocher PC ensuite ne le fait pas réapparaître ; sélecteur de statut de la Fiche jeu identique
+  visuellement (icônes + glissement) à celui de la Bibliothèque, avec 4 tuiles au lieu de 5 ;
+  toggle de possession bascule Oui ↔ Non avec pastille glissante, masque/affiche bien statut et
+  plateformes de complétion selon l'état, aucune erreur console. Toggle également vérifié dans
+  la Sheet d'ajout (`AjouterSheet.jsx`, ouverte depuis un résultat Découvrir) : bascule Oui ↔ Non,
+  masque bien statut/note/commentaire quand décoché.
