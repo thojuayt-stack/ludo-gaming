@@ -10,6 +10,7 @@ import {
   resolveStatusForPossession,
   nextPlayCount,
   completionLabel,
+  statusPillLabel,
   isOwnershipLocked,
   splitBacklogByAvailability,
 } from "./library-pure.js";
@@ -104,6 +105,18 @@ test("completionLabel affiche le nombre de parties seulement au-delà de 1", () 
   assert.equal(completionLabel(0), "Terminé");
   assert.equal(completionLabel(2), "Terminé ×2");
   assert.equal(completionLabel(5), "Terminé ×5");
+});
+
+test("statusPillLabel affiche 'Non possédé' si non possédé, quel que soit le statut", () => {
+  assert.equal(statusPillLabel("termine", false, 3), "Non possédé");
+  assert.equal(statusPillLabel("backlog", false, 0), "Non possédé");
+});
+
+test("statusPillLabel affiche 'Terminé ×N' pour un jeu terminé possédé, sinon le libellé du statut", () => {
+  assert.equal(statusPillLabel("termine", true, 1), "Terminé");
+  assert.equal(statusPillLabel("termine", true, 3), "Terminé ×3");
+  assert.equal(statusPillLabel("en_cours", true, 0), "En cours");
+  assert.equal(statusPillLabel("backlog", true, 0), "À faire");
 });
 
 test("isOwnershipLocked est vrai seulement pour une date de sortie future connue", () => {

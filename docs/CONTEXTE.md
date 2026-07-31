@@ -37,7 +37,9 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   (Tous/**À faire**/En cours/Terminé/Abandonné — « À faire » est le libellé affiché, la clé
   interne reste `backlog`), navigable aussi par glissement tactile gauche/droite entre les
   filtres. Un jeu non possédé affiche « Non possédé » à la place de son statut (toujours « À
-  faire » dans ce cas). Sous l'onglet **À faire** uniquement, la liste est coupée en 2 sections —
+  faire » dans ce cas) ; un jeu terminé affiche « Terminé ×N » sur sa pastille dès qu'il a été
+  rejoué (`playCount > 1`), même libellé qu'à la Fiche jeu, en grille comme en liste. Sous
+  l'onglet **À faire** uniquement, la liste est coupée en 2 sections —
   **Disponible** (jeu sorti) / **Non disponible** (pas encore sorti, badge countdown à la place
   de la pastille de statut, même formatage que À venir) ; les autres onglets restent une liste
   plate. État vide avec bouton "Ajouter un jeu" vers Découvrir (même bouton sur l'état vide
@@ -376,3 +378,16 @@ alors qu'on peut terminer un même jeu sur plusieurs supports.
   l'utilisateur).
 - `src/lib/export-pure.test.js` : fixtures mises à jour pour refléter le nouveau format tableau
   (aucun changement de logique dans `export-pure.js`, simple passthrough).
+
+### Livraison 13 — Pastille "Terminé ×N" dans la Bibliothèque (2026-07-30)
+Retouche sans nouveau cahier des charges (le libellé « Terminé ×N » existait déjà à la Fiche
+jeu, `completionLabel` — ce chantier l'étend à la pastille de statut de la Bibliothèque, aucun
+nouveau design), suite à un retour utilisateur avec capture annotée.
+- Nouvelle fonction pure `statusPillLabel(status, possede, playCount)` dans `library-pure.js` (2
+  tests) : factorise « Non possédé » / `completionLabel` / libellé de statut brut, réutilisée par
+  `StatusPill.jsx` (nouvelle prop `playCount`) et la pastille inline de la tuile grille dans
+  `Bibliotheque.jsx`.
+- Vérifié en conditions réelles avec les vraies données de l'utilisateur : « The Witcher 3: Wild
+  Hunt » et « Red Dead Redemption 2 », tous deux rejoués 3 fois (`playCount: 3`, confirmé par
+  lecture directe d'IndexedDB), affichent bien « Terminé ×3 » sur leur pastille en grille comme
+  en liste, lisible avec le fond sombre unifié (Livraison 9).

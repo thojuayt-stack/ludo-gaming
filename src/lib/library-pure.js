@@ -47,6 +47,12 @@ export function completionLabel(playCount) {
   return playCount > 1 ? `Terminé ×${playCount}` : "Terminé";
 }
 
+/** Libellé affiché sur la pastille de statut (Bibliothèque) : gère "Non possédé" et "Terminé ×N". */
+export function statusPillLabel(status, possede, playCount) {
+  if (!possede) return "Non possédé";
+  return status === "termine" ? completionLabel(playCount) : STATUS_LABELS[status];
+}
+
 /** On ne peut pas posséder un jeu dont la date de sortie est future et connue. */
 export function isOwnershipLocked(releaseDate, now = Date.now()) {
   return releaseDate != null && releaseDate > now;

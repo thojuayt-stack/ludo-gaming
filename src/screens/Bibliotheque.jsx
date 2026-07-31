@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { listLibraryEntries } from "../lib/library.js";
-import { STATUSES, STATUS_LABELS, splitBacklogByAvailability } from "../lib/library-pure.js";
+import { STATUSES, STATUS_LABELS, statusPillLabel, splitBacklogByAvailability } from "../lib/library-pure.js";
 import { daysUntil } from "../lib/wishlist-pure.js";
 import { getGame } from "../lib/igdb.js";
 import PageHeader from "../components/PageHeader.jsx";
@@ -24,7 +24,7 @@ function GameGridTile({ entry, game, onOpen, showCountdown }) {
         </span>
       ) : (
         <span className={`pill pill-${entry.status} absolute left-1.5 top-1.5 z-10`}>
-          {entry.possede ? STATUS_LABELS[entry.status] : "Non possédé"}
+          {statusPillLabel(entry.status, entry.possede, entry.playCount)}
         </span>
       )}
       <Cover title={game?.title} coverUrl={game?.coverUrl} className="aspect-[3/4] w-full" />
@@ -46,7 +46,7 @@ function GameListRow({ entry, game, onOpen, showCountdown }) {
           {game?.platforms?.[0] && <span className="plat">{game.platforms[0]}</span>}
           {!showCountdown && (
             <>
-              <StatusPill status={entry.status} possede={entry.possede} />
+              <StatusPill status={entry.status} possede={entry.possede} playCount={entry.playCount} />
               <Stars rating={entry.rating} />
             </>
           )}

@@ -1,6 +1,6 @@
-import { STATUS_LABELS } from "../lib/library-pure.js";
+import { statusPillLabel } from "../lib/library-pure.js";
 
-export default function StatusPill({ status, possede = true }) {
-  const label = possede ? STATUS_LABELS[status] : "Non possédé";
+export default function StatusPill({ status, possede = true, playCount }) {
+  const label = statusPillLabel(status, possede, playCount);
   return <span className={`pill pill-${status}`}>{label}</span>;
 }
