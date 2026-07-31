@@ -243,6 +243,14 @@ textarea.field { resize: vertical; }
 .cover[data-fit="contain"] { background: var(--glass-bg); border: 1px solid var(--glass-border); }
 .cover[data-fit="contain"]::after { content: none; }
 
+/*
+ * Fond sombre fixe (indépendant du thème clair/sombre) plutôt qu'un tint transparent : une
+ * pastille de statut se pose sur une jaquette de jeu à la luminosité imprévisible (ex. jaquette
+ * claire de Wolverine), un fond translucide devient illisible dans ce cas. Seule la couleur du
+ * texte varie par statut ; les couleurs sont fixées (pas les tokens --status-progress,
+ * --positive, etc., pensés pour du texte sur fond clair/glass) pour rester lisibles sur ce
+ * fond toujours sombre.
+ */
 .pill {
   display: inline-flex;
   align-items: center;
@@ -252,12 +260,15 @@ textarea.field { resize: vertical; }
   font-weight: 600;
   padding: 0.22rem 0.55rem;
   white-space: nowrap;
+  background: rgba(20, 16, 30, 0.72);
+  backdrop-filter: blur(6px) saturate(150%);
+  -webkit-backdrop-filter: blur(6px) saturate(150%);
 }
 .pill::before { content: ""; width: 0.4rem; height: 0.4rem; border-radius: 9999px; background: currentColor; }
-.pill-backlog { background: var(--glass-bg); color: var(--faint); }
-.pill-en_cours { background: color-mix(in srgb, var(--status-progress) 18%, transparent); color: var(--status-progress); }
-.pill-termine { background: color-mix(in srgb, var(--positive) 18%, transparent); color: var(--positive); }
-.pill-abandonne { background: color-mix(in srgb, var(--negative) 16%, transparent); color: var(--negative); }
+.pill-backlog { color: rgba(255, 255, 255, 0.82); }
+.pill-en_cours { color: #38bdf8; }
+.pill-termine { color: #4ade80; }
+.pill-abandonne { color: #f87171; }
 
 .plat {
   font-size: 0.68rem;
