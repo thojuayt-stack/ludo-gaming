@@ -216,6 +216,24 @@ textarea.field { resize: vertical; }
   font-weight: 600;
 }
 
+/*
+ * Variante icône au-dessus / texte en dessous (filtre de statut de la Bibliothèque) — même
+ * gabarit que la barre de navigation basse (icône + petit libellé, toujours visibles, actif
+ * seulement distingué par le fond). Classe séparée de .segment-item de base pour ne pas changer
+ * les autres segments de l'app (Fiche jeu, Profil, Sheet d'ajout — restent une seule ligne de
+ * texte).
+ */
+.segment-item-stacked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 0.5rem 0.2rem;
+}
+.segment-item-stacked svg { width: 1.15rem; height: 1.15rem; }
+.segment-item-stacked .label { font-size: 0.62rem; font-weight: 600; }
+
 /* ── Domaine : jaquettes & statuts ── */
 .cover {
   border-radius: 0.9rem;

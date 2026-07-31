@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ludothèque — Maquette navigation en pilule (statuts + barre du bas)</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --foreground: #eef1fb; --muted: rgba(238, 241, 251, 0.58); --faint: rgba(238, 241, 251, 0.38);
+    --bg-base: #0c0e1a; --bg-blob-1: rgba(124, 92, 214, 0.5); --bg-blob-2: rgba(24, 116, 130, 0.45);
+    --glass-bg: rgba(255, 255, 255, 0.07); --glass-bg-strong: rgba(255, 255, 255, 0.11);
+    --glass-border: rgba(255, 255, 255, 0.14); --glass-highlight: rgba(255, 255, 255, 0.22);
+    --glass-shadow: rgba(0, 0, 0, 0.4); --elevated: #171526;
+    --accent: #f2ab2e; --accent-ink: #241300; --positive: #4ade80; --negative: #f87171;
+    --status-progress: #38bdf8;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg-base); color: var(--foreground); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  h1, h2 { margin: 0; }
+  .app-bg { position: fixed; inset: 0; z-index: -1; background: radial-gradient(120% 80% at 12% 0%, var(--bg-blob-1) 0%, transparent 55%), radial-gradient(120% 90% at 95% 15%, var(--bg-blob-2) 0%, transparent 50%), var(--bg-base); }
+  .shell { max-width: 460px; margin: 0 auto; min-height: 100vh; position: relative; padding-bottom: 7rem; }
+  .glass-strong { background: var(--glass-bg-strong); backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%); border: 1px solid var(--glass-border); box-shadow: inset 0 1px 0 0 var(--glass-highlight), 0 12px 40px -10px var(--glass-shadow); }
+  .px { padding-left: 1.1rem; padding-right: 1.1rem; }
+  header.page { padding: 1.6rem 1.1rem 1.2rem; }
+  header.page h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.01em; }
+  .note { margin: 0 1.1rem 1.2rem; padding: 0.8rem 0.9rem; border-radius: 0.9rem; font-size: 0.78rem; color: var(--muted); background: var(--glass-bg); border: 1px solid var(--glass-border); }
+  svg { width: 1.15rem; height: 1.15rem; flex-shrink: 0; }
+
+  /*
+   * ── Filtre de statut "en pilule" (Bibliothèque) — v3, d'après la vidéo de référence ──
+   * Les 5 icônes sont dans une grille à colonnes ÉGALES et FIXES : elles ne bougent jamais,
+   * point final, quelle que soit l'icône active (contrairement aux versions précédentes où
+   * un item qui grandissait poussait ses voisins). Une pastille FLOTTANTE unique (position
+   * absolute), séparée de la grille, se déplace/redimensionne par-dessus pour "voyager" vers
+   * l'item actif (mesure JS de la position de la colonne cible + transition CSS sur
+   * transform/width, easing avec léger rebond pour l'effet liquide vu dans la vidéo).
+   */
+  .status-pill-bar {
+    position: relative;
+    display: grid; grid-template-columns: repeat(5, 1fr); align-items: center;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: 9999px; padding: 0.4rem; margin: 0 1.1rem 1.4rem;
+  }
+  .status-item {
+    position: relative; z-index: 2;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: transparent; color: var(--muted);
+    height: 2.5rem; border-radius: 9999px; cursor: pointer;
+    transition: color 0.2s ease;
+  }
+  /* .is-covered : posée par JS sur TOUTE colonne actuellement recouverte par la pastille
+     (pas seulement la colonne active) — évite qu'une icône voisine dépasse à moitié derrière
+     la pastille quand celle-ci doit s'étendre sur plusieurs colonnes. */
+  .status-item.is-covered { color: transparent; }
+
+  .status-indicator {
+    position: absolute; top: 0.4rem; left: 0; height: 2.5rem;
+    display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+    padding: 0 0.85rem; border-radius: 9999px; z-index: 1;
+    background: var(--accent); color: var(--accent-ink);
+    white-space: nowrap; overflow: hidden;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .status-indicator span { font-size: 0.84rem; font-weight: 700; opacity: 0; transition: opacity 0.2s ease 0.15s; }
+  .status-indicator[data-visible="true"] span { opacity: 1; }
+
+  /*
+   * ── Barre de navigation basse ── Contrairement au filtre de statut : les 4 noms restent
+   * TOUJOURS affichés (aucun morph ici), seule la pastille d'accent derrière l'item actif change.
+   */
+  nav.bottom-nav {
+    position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; justify-content: center; gap: 0.3rem;
+    border-radius: 9999px; padding: 0.4rem; z-index: 30;
+  }
+  nav.bottom-nav button {
+    display: flex; align-items: center; gap: 0.3rem;
+    border: none; background: transparent; color: var(--faint);
+    border-radius: 9999px; padding: 0.55rem 0.6rem; cursor: pointer;
+    font-size: 0.68rem; font-weight: 700; white-space: nowrap;
+    transition: background 0.25s ease, color 0.2s ease;
+  }
+  nav.bottom-nav svg { width: 1.05rem; height: 1.05rem; }
+  nav.bottom-nav button[data-active="true"] { background: var(--accent); color: var(--accent-ink); }
+</style>
+</head>
+<body>
+<div class="app-bg" aria-hidden="true"></div>
+<div class="shell">
+
+  <header class="page"><h1>Bibliothèque</h1></header>
+
+  <div class="note">
+    Maquette corrigée : sur le <b>filtre de statut</b>, seul l'actif affiche icône + nom (morph
+    fluide, icône fixe qui ne bouge jamais, groupe centré). Sur la <b>barre du bas</b>, les 4
+    noms restent affichés en permanence — seule la pastille d'accent derrière l'onglet actif
+    change, sans animation de largeur.
+  </div>
+
+  <div class="status-pill-bar" id="status-bar">
+    <div class="status-indicator" id="status-indicator" data-visible="true">
+      <span class="ind-icon"></span>
+      <span class="ind-label"></span>
+    </div>
+    <button class="status-item" data-key="tous" data-active="true" data-label="Tous">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.3"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.3"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.3"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.3"/></svg>
+    </button>
+    <button class="status-item" data-key="afaire" data-label="À faire">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="7.5"/></svg>
+    </button>
+    <button class="status-item" data-key="encours" data-label="En cours">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7.5"/><path d="M10 9l5 3-5 3V9z" fill="currentColor" stroke="none"/></svg>
+    </button>
+    <button class="status-item" data-key="termine" data-label="Terminé">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l4.5 4.5 10.5-11"/></svg>
+    </button>
+    <button class="status-item" data-key="abandonne" data-label="Abandonné">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+
+  <div class="note" style="margin-top:8rem;">↓ Barre de navigation basse — même comportement.</div>
+
+</div>
+
+<nav class="bottom-nav glass-strong" id="bottom-nav">
+  <button data-key="biblio" data-active="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8" width="19" height="10" rx="4"/><circle cx="16.5" cy="11.5" r="0.8" fill="currentColor" stroke="none"/><circle cx="16.5" cy="14.5" r="0.8" fill="currentColor" stroke="none"/><line x1="6" y1="11.5" x2="6" y2="14.5"/><line x1="4.5" y1="13" x2="7.5" y2="13"/></svg>
+    <span>Bibliothèque</span>
+  </button>
+  <button data-key="avenir">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><line x1="3.5" y1="9.5" x2="20.5" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/></svg>
+    <span>À venir</span>
+  </button>
+  <button data-key="decouvrir">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="16.2" y1="16.2" x2="21" y2="21"/></svg>
+    <span>Découvrir</span>
+  </button>
+  <button data-key="profil">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.5 20c0-4 3.5-6.5 7.5-6.5s7.5 2.5 7.5 6.5"/></svg>
+    <span>Profil</span>
+  </button>
+</nav>
+
+<script>
+  // ── Filtre de statut : grille fixe + pastille flottante qui voyage vers l'item actif ──
+  const statusBar = document.getElementById('status-bar');
+  const indicator = document.getElementById('status-indicator');
+  const statusItems = [...statusBar.querySelectorAll('.status-item')];
+
+  // Sonde invisible (mêmes classes que la pastille réelle) pour mesurer la largeur d'un
+  // icône+label sans jamais toucher au layout/à la largeur de la pastille visible — évite
+  // tout flash pendant la mesure.
+  const probe = indicator.cloneNode(true);
+  probe.removeAttribute('id');
+  probe.style.visibility = 'hidden';
+  probe.style.position = 'absolute';
+  probe.style.width = 'auto';
+  probe.style.transition = 'none';
+  probe.dataset.visible = 'true';
+  statusBar.appendChild(probe);
+
+  function iconMarkup(item) {
+    return item.querySelector('svg').outerHTML;
+  }
+
+  function moveIndicatorTo(item, { animate = true } = {}) {
+    const barRect = statusBar.getBoundingClientRect();
+    const columnWidth = barRect.width / statusItems.length;
+    const activeIndex = statusItems.indexOf(item);
+    const lastIndex = statusItems.length - 1;
+
+    probe.querySelector('.ind-icon').innerHTML = iconMarkup(item);
+    probe.querySelector('.ind-label').textContent = item.dataset.label;
+    const contentWidth = probe.getBoundingClientRect().width;
+
+    /*
+     * La pastille ne doit JAMAIS chevaucher partiellement une icône voisine (ex. "Abandonné"
+     * recouvrant la moitié de "Terminé") : sa largeur est arrondie à un nombre ENTIER de
+     * colonnes, et elle s'étend par défaut vers la droite depuis sa propre colonne ; si ça
+     * déborderait de la barre, tout le bloc de colonnes couvertes glisse vers la gauche d'un
+     * coup (jamais un chevauchement partiel). Les icônes des colonnes couvertes (au-delà de la
+     * sienne) sont masquées le temps d'être recouvertes par la pastille.
+     */
+    const columnsNeeded = Math.min(statusItems.length, Math.max(1, Math.ceil(contentWidth / columnWidth)));
+    let rightIndex = activeIndex + columnsNeeded - 1;
+    let leftIndex = activeIndex;
+    if (rightIndex > lastIndex) {
+      const overflow = rightIndex - lastIndex;
+      leftIndex -= overflow;
+      rightIndex -= overflow;
+    }
+    leftIndex = Math.max(0, leftIndex);
+
+    const left = leftIndex * columnWidth;
+    const width = (rightIndex - leftIndex + 1) * columnWidth;
+
+    statusItems.forEach((it, i) => {
+      it.classList.toggle('is-covered', i >= leftIndex && i <= rightIndex);
+    });
+
+    if (!animate) indicator.style.transition = 'none';
+    indicator.querySelector('.ind-icon').innerHTML = iconMarkup(item);
+    indicator.querySelector('.ind-label').textContent = item.dataset.label;
+    indicator.style.transform = `translateX(${left}px)`;
+    indicator.style.width = `${width}px`;
+    if (!animate) {
+      void indicator.offsetWidth; // force l'application avant de réactiver la transition
+      indicator.style.transition = '';
+    }
+  }
+
+  function setActive(key) {
+    const target = statusItems.find((it) => it.dataset.key === key);
+    statusItems.forEach((it) => { it.dataset.active = it === target ? 'true' : 'false'; });
+    moveIndicatorTo(target);
+  }
+
+  statusItems.forEach((btn) => {
+    btn.addEventListener('click', () => setActive(btn.dataset.key));
+  });
+
+  // Position initiale sans animation (évite un "vol" depuis (0,0) au chargement).
+  moveIndicatorTo(statusItems[0], { animate: false });
+
+  // ── Barre de navigation basse : simple bascule de fond, aucun déplacement ──
+  function wireBar(id) {
+    const bar = document.getElementById(id);
+    bar.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        bar.querySelectorAll('button').forEach(b => b.dataset.active = 'false');
+        btn.dataset.active = 'true';
+      });
+    });
+  }
+  wireBar('bottom-nav');
+</script>
+</body>
+</html>

@@ -8,10 +8,17 @@ import Cover from "../components/Cover.jsx";
 import StatusPill from "../components/StatusPill.jsx";
 import Stars from "../components/Stars.jsx";
 import Countdown from "../components/Countdown.jsx";
-import { ListIcon, GridIcon } from "../components/icons.jsx";
+import { ListIcon, GridIcon, CircleIcon, PlayCircleIcon, CheckIcon, XIcon } from "../components/icons.jsx";
 
 const FILTERS = ["tous", ...STATUSES];
 const FILTER_LABELS = { tous: "Tous", ...STATUS_LABELS };
+const FILTER_ICONS = {
+  tous: GridIcon,
+  backlog: CircleIcon,
+  en_cours: PlayCircleIcon,
+  termine: CheckIcon,
+  abandonne: XIcon,
+};
 
 const SWIPE_MIN_DISTANCE = 60;
 
@@ -168,16 +175,20 @@ export default function Bibliotheque({ onOpenGame, onNavigate }) {
 
       <div className="mb-3 px-4">
         <div className="segment flex">
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              className="segment-item flex-1"
-              data-active={filter === f}
-              onClick={() => setFilter(f)}
-            >
-              {FILTER_LABELS[f]}
-            </button>
-          ))}
+          {FILTERS.map((f) => {
+            const Icon = FILTER_ICONS[f];
+            return (
+              <button
+                key={f}
+                className="segment-item segment-item-stacked flex-1"
+                data-active={filter === f}
+                onClick={() => setFilter(f)}
+              >
+                <Icon />
+                <span className="label">{FILTER_LABELS[f]}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

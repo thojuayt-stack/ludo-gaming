@@ -37,7 +37,9 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   l'app PlayStation — titre en gras et 1ʳᵉ plateforme sous chaque tuile), bascule Liste
   disponible (inchangée, compacte), filtre par statut
   (Tous/**À faire**/En cours/Terminé/Abandonné — « À faire » est le libellé affiché, la clé
-  interne reste `backlog`), navigable aussi par glissement tactile gauche/droite entre les
+  interne reste `backlog`) avec une icône par statut, affichée au-dessus du libellé (même
+  gabarit que la barre de navigation basse : icône + petit texte toujours visibles, l'actif
+  distingué uniquement par son fond), navigable aussi par glissement tactile gauche/droite entre les
   filtres. Un jeu non possédé affiche « Non possédé » à la place de son statut (toujours « À
   faire » dans ce cas) ; un jeu terminé affiche « Terminé ×N » sur sa pastille dès qu'il a été
   rejoué (`playCount > 1`), même libellé qu'à la Fiche jeu, en grille comme en liste. Sous
@@ -455,3 +457,24 @@ téléphone au-delà du même Wi-Fi.
   interaction de cocher/décocher une plateforme testée (Switch ajouté puis retiré, comportement
   identique à avant) ; vue liste et Découvrir vérifiés inchangés ; aucune erreur console ;
   `npm test` toujours à 57/57 (aucune logique pure touchée).
+
+### Livraison 17 — Icônes sur le filtre de statut de la Bibliothèque (2026-07-31)
+Retouche sans nouveau cahier des charges (réutilise tel quel le gabarit déjà en place de la
+barre de navigation basse, aucun nouveau design) — après plusieurs allers-retours de maquette
+sur une animation de pastille flottante façon PlayStation, écartée au profit de la version
+simple validée par l'utilisateur : icône au-dessus, libellé en dessous, toujours affichés (pas
+de morph). Ces explorations sont restées dans une maquette autonome jamais intégrée au code
+([mockups/navigation-pill-icones.html](../mockups/navigation-pill-icones.html), conservée à
+titre d'historique de la décision).
+- 4 nouvelles icônes dans `src/components/icons.jsx` (`CircleIcon`, `PlayCircleIcon`,
+  `CheckIcon`, `XIcon`) pour À faire/En cours/Terminé/Abandonné ; « Tous » réutilise `GridIcon`
+  déjà existant.
+- `src/screens/Bibliotheque.jsx` : le filtre de statut affiche désormais une icône par onglet
+  au-dessus du libellé. `src/styles/globals.css` : nouvelle classe `.segment-item-stacked`,
+  isolée de `.segment-item` de base pour ne pas affecter les autres segments de l'app (Fiche
+  jeu, Profil, Sheet d'ajout — restent une seule ligne de texte).
+- La barre de navigation basse elle-même n'a pas changé (déjà dans ce gabarit avant ce
+  chantier).
+- Vérifié en conditions réelles : les 5 icônes s'affichent, le clic sur un filtre (testé avec
+  « À faire ») filtre toujours correctement la bibliothèque, aucune erreur console,
+  `npm test` toujours à 57/57.
