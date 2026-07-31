@@ -10,7 +10,7 @@ test("buildExportPayload inclut le titre lisible et les nouveaux champs pour cha
         status: "termine",
         possede: true,
         platforms: ["PC"],
-        finishedPlatform: "PC",
+        finishedPlatform: ["PC"],
         playCount: 2,
         rating: 9,
         comment: "top",
@@ -23,7 +23,7 @@ test("buildExportPayload inclut le titre lisible et les nouveaux champs pour cha
   assert.equal(payload.library[0].title, "Hades");
   assert.equal(payload.library[0].possede, true);
   assert.equal(payload.library[0].playCount, 2);
-  assert.equal(payload.library[0].finishedPlatform, "PC");
+  assert.deepEqual(payload.library[0].finishedPlatform, ["PC"]);
   assert.ok(payload.exportedAt);
 });
 
@@ -35,7 +35,7 @@ test("buildExportPayload gère un titre manquant sans planter", () => {
         status: "backlog",
         possede: false,
         platforms: [],
-        finishedPlatform: null,
+        finishedPlatform: [],
         playCount: 0,
         rating: null,
         comment: "",

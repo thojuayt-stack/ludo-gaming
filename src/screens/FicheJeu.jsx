@@ -55,8 +55,10 @@ export default function FicheJeu({ igdbId, onBack }) {
     setEntry(updated);
   }
 
-  async function handleFinishedPlatformChange(p) {
-    const updated = await updateLibraryEntry(igdbId, { finishedPlatform: p || null });
+  async function handleToggleFinishedPlatform(p) {
+    const current = entry.finishedPlatform || [];
+    const next = current.includes(p) ? current.filter((x) => x !== p) : [...current, p];
+    const updated = await updateLibraryEntry(igdbId, { finishedPlatform: next });
     setEntry(updated);
   }
 
@@ -215,19 +217,22 @@ export default function FicheJeu({ igdbId, onBack }) {
 
             {entry.possede && entry.status === "termine" && (
               <>
-                <label className="flex flex-col gap-1 text-sm">
-                  <span className="text-muted">Terminé sur quelle plateforme ?</span>
-                  <select
-                    className="field"
-                    value={entry.finishedPlatform || ""}
-                    onChange={(e) => handleFinishedPlatformChange(e.target.value)}
-                  >
-                    <option value="">—</option>
+                <div className="flex flex-col gap-1 text-sm">
+                  <span className="text-muted">Terminé sur quelle(s) plateforme(s) ?</span>
+                  <div className="flex flex-wrap gap-1.5">
                     {finishedPlatformOptions.map((p) => (
-                      <option key={p} value={p}>{p}</option>
+                      <button
+                        type="button"
+                        key={p}
+                        className="plat"
+                        data-active={(entry.finishedPlatform || []).includes(p)}
+                        onClick={() => handleToggleFinishedPlatform(p)}
+                      >
+                        {p}
+                      </button>
                     ))}
-                  </select>
-                </label>
+                  </div>
+                </div>
 
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted">{completionLabel(entry.playCount)}</span>

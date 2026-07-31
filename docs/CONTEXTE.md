@@ -50,9 +50,10 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
 - **Fiche jeu** : mise en page côte à côte — jaquette entière et nette à gauche (sans rognage,
   `object-fit: contain`), infos à droite, synopsis en dessous. Bloc « Mon suivi » unique
   (2 cas : le jeu est dans la bibliothèque, ou pas encore ajouté) avec toggle possession,
-  statut (si possédé), plateformes possédées, plateforme de complétion + compteur
-  « Terminé ×N » + bouton **Recommencer** (si terminé), note/commentaire (si possédé, jamais
-  effacés si on décoche possession — juste masqués), retrait avec confirmation.
+  statut (si possédé), plateformes possédées, plateforme(s) de complétion (**plusieurs
+  possibles**, pastilles à cocher comme les plateformes possédées) + compteur « Terminé ×N » +
+  bouton **Recommencer** (si terminé), note/commentaire (si possédé, jamais effacés si on
+  décoche possession — juste masqués), retrait avec confirmation.
 - **Profil** : donut + 4 tuiles de statistiques calculées localement (jeux terminés, plateforme
   et genre les plus fréquents — la plateforme utilise en priorité celles cochées comme
   possédées, note moyenne — « — » si rien à calculer plutôt qu'un NaN), réglage d'apparence
@@ -353,3 +354,25 @@ précédent) :
   bug de requête.
 - `onboarding_seen_v1` remis à zéro après vérification pour que l'utilisateur voie l'écran par
   lui-même ; aucune donnée de test ajoutée à la bibliothèque pendant ce passage.
+
+### Livraison 12 — Plateforme(s) de complétion multiple (2026-07-30)
+Retouche sans nouveau cahier des charges (réutilise telle quelle l'interaction déjà validée des
+« Plateformes possédées », aucun nouveau design), suite à un retour utilisateur avec capture
+annotée : « Terminé sur quelle plateforme ? » n'acceptait qu'une seule plateforme (`<select>`),
+alors qu'on peut terminer un même jeu sur plusieurs supports.
+- `finishedPlatform` passe de `string | null` à `string[]` dans `LibraryEntry`
+  (`src/lib/library.js`) ; `FicheJeu.jsx` remplace le `<select>` par des pastilles à cocher
+  (exactement le pattern déjà utilisé pour « Plateformes possédées », `handleToggleFinishedPlatform`
+  au lieu d'un setter unique).
+- **Nouvelle migration** `migrateFinishedPlatformToArray` (`src/lib/library.js`, branchée dans
+  `src/main.jsx`) : convertit une ancienne valeur string en tableau à un élément, `null`/absent en
+  tableau vide. Idempotente (flag `localStorage`), même pattern que les deux migrations
+  précédentes.
+- Vérifié en conditions réelles sur « The Witcher 3: Wild Hunt » (donnée réelle de l'utilisateur,
+  `finishedPlatform: "PC"` avant migration) : après migration, PC apparaît bien coché seul ;
+  cocher PS4 en plus fait apparaître les deux comme actifs simultanément ; la sélection à deux
+  plateformes résiste à un rechargement complet de la page (persistance IndexedDB réelle).
+  Changement de test annulé après vérification (PS4 redécoché, retour à l'état d'origine de
+  l'utilisateur).
+- `src/lib/export-pure.test.js` : fixtures mises à jour pour refléter le nouveau format tableau
+  (aucun changement de logique dans `export-pure.js`, simple passthrough).

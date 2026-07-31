@@ -38,7 +38,7 @@ export async function addToLibrary({
     status: resolvedStatus,
     possede,
     platforms,
-    finishedPlatform: null,
+    finishedPlatform: [],
     playCount: resolvedStatus === "termine" ? 1 : 0,
     rating: possede ? rating : null,
     comment: possede ? comment : "",
@@ -81,6 +81,7 @@ export async function listLibraryEntries({ status, possede } = {}) {
 
 const WISHLIST_MIGRATION_FLAG = "wishlist_migrated_v1";
 const SCHEMA_MIGRATION_FLAG = "library_schema_v2";
+const FINISHED_PLATFORM_ARRAY_FLAG = "finished_platform_array_v1";
 
 /**
  * Migration unique (chantier 4) : les anciennes WishlistEntry deviennent des
@@ -105,7 +106,7 @@ export async function migrateWishlistToLibrary() {
         status: "backlog",
         possede: false,
         platforms: [],
-        finishedPlatform: null,
+        finishedPlatform: [],
         playCount: 0,
         rating: null,
         comment: "",
@@ -145,7 +146,7 @@ export async function migrateLibrarySchema() {
         ...entry,
         possede: true,
         platforms: entry.platforms ?? [],
-        finishedPlatform: entry.finishedPlatform ?? null,
+        finishedPlatform: entry.finishedPlatform ?? [],
         playCount: entry.playCount ?? (entry.status === "termine" ? 1 : 0),
       });
     }
@@ -153,6 +154,36 @@ export async function migrateLibrarySchema() {
 
   try {
     localStorage.setItem(SCHEMA_MIGRATION_FLAG, "1");
+  } catch {
+    // best effort
+  }
+}
+
+/**
+ * Migration unique : `finishedPlatform` passe d'une seule plateforme (string | null) à
+ * plusieurs (string[]), pour pouvoir noter un jeu terminé sur plusieurs supports. Idempotente.
+ */
+export async function migrateFinishedPlatformToArray() {
+  try {
+    if (typeof localStorage !== "undefined" && localStorage.getItem(FINISHED_PLATFORM_ARRAY_FLAG)) {
+      return;
+    }
+  } catch {
+    // pas de localStorage : on retentera au prochain démarrage, sans risque (idempotent)
+  }
+
+  const all = await libraryDb.values();
+  for (const entry of all) {
+    if (!Array.isArray(entry.finishedPlatform)) {
+      await libraryDb.set(entry.igdbId, {
+        ...entry,
+        finishedPlatform: entry.finishedPlatform ? [entry.finishedPlatform] : [],
+      });
+    }
+  }
+
+  try {
+    localStorage.setItem(FINISHED_PLATFORM_ARRAY_FLAG, "1");
   } catch {
     // best effort
   }
