@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { listLibraryEntries } from "../lib/library.js";
 import { STATUSES, STATUS_LABELS, statusPillLabel, splitBacklogByAvailability } from "../lib/library-pure.js";
 import { daysUntil } from "../lib/wishlist-pure.js";
@@ -21,98 +21,6 @@ const FILTER_ICONS = {
 };
 
 const SWIPE_MIN_DISTANCE = 60;
-
-/**
- * Filtre de statut : icônes dans une grille à colonnes fixes (elles ne bougent jamais) + une
- * pastille flottante unique qui glisse vers l'item actif, seul à afficher son libellé. La
- * pastille s'arrondit toujours à un nombre ENTIER de colonnes (jamais un chevauchement partiel
- * d'une icône voisine) et s'étend vers la droite par défaut, vers la gauche pour le dernier
- * item faute de place.
- */
-function StatusFilterBar({ filters, active, labels, icons, onChange }) {
-  const barRef = useRef(null);
-  const itemRefs = useRef({});
-  const indicatorRef = useRef(null);
-  const probeRef = useRef(null);
-  const isFirstRender = useRef(true);
-
-  const moveIndicator = useCallback((key, animate) => {
-    const bar = barRef.current;
-    const indicator = indicatorRef.current;
-    const probe = probeRef.current;
-    if (!bar || !indicator || !probe) return;
-
-    const barRect = bar.getBoundingClientRect();
-    const columnWidth = barRect.width / filters.length;
-    const activeIndex = filters.indexOf(key);
-    const lastIndex = filters.length - 1;
-    const contentWidth = probe.getBoundingClientRect().width;
-
-    const columnsNeeded = Math.min(filters.length, Math.max(1, Math.ceil(contentWidth / columnWidth)));
-    let rightIndex = activeIndex + columnsNeeded - 1;
-    let leftIndex = activeIndex;
-    if (rightIndex > lastIndex) {
-      const overflow = rightIndex - lastIndex;
-      leftIndex -= overflow;
-      rightIndex -= overflow;
-    }
-    leftIndex = Math.max(0, leftIndex);
-
-    filters.forEach((f, i) => {
-      itemRefs.current[f]?.classList.toggle("is-covered", i >= leftIndex && i <= rightIndex);
-    });
-
-    if (!animate) indicator.style.transition = "none";
-    indicator.style.transform = `translateX(${leftIndex * columnWidth}px)`;
-    indicator.style.width = `${(rightIndex - leftIndex + 1) * columnWidth}px`;
-    if (!animate) {
-      void indicator.offsetWidth; // force l'application avant de réactiver la transition CSS
-      indicator.style.transition = "";
-    }
-  }, [filters]);
-
-  useLayoutEffect(() => {
-    moveIndicator(active, !isFirstRender.current);
-    isFirstRender.current = false;
-  }, [active, moveIndicator]);
-
-  useEffect(() => {
-    const handleResize = () => moveIndicator(active, false);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [active, moveIndicator]);
-
-  const ActiveIcon = icons[active];
-
-  return (
-    <div className="status-filter" ref={barRef}>
-      <div className="status-indicator" ref={indicatorRef}>
-        <ActiveIcon />
-        <span>{labels[active]}</span>
-      </div>
-      <div className="status-filter-probe" ref={probeRef} aria-hidden="true">
-        <ActiveIcon />
-        <span>{labels[active]}</span>
-      </div>
-      {filters.map((f) => {
-        const Icon = icons[f];
-        return (
-          <button
-            key={f}
-            ref={(el) => { itemRefs.current[f] = el; }}
-            type="button"
-            className="status-filter-item"
-            onClick={() => onChange(f)}
-            aria-label={labels[f]}
-            aria-pressed={active === f}
-          >
-            <Icon />
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 function GameGridTile({ entry, game, onOpen, showCountdown }) {
   return (
@@ -266,15 +174,25 @@ export default function Bibliotheque({ onOpenGame, onNavigate }) {
       />
 
       <div className="mb-3 px-4">
-        <StatusFilterBar filters={FILTERS} active={filter} labels={FILTER_LABELS} icons={FILTER_ICONS} onChange={setFilter} />
+        <div className="segment flex">
+          {FILTERS.map((f) => {
+            const Icon = FILTER_ICONS[f];
+            return (
+              <button
+                key={f}
+                className="segment-item segment-item-stacked flex-1"
+                data-active={filter === f}
+                onClick={() => setFilter(f)}
+              >
+                <Icon />
+                <span className="label">{FILTER_LABELS[f]}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <div
-        className="fade-content"
-        data-visible={items != null}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
+      <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         {items && items.length === 0 && (
           <div className="px-4">
             <p className="text-sm text-faint">Ta bibliothèque est vide pour l'instant.</p>
