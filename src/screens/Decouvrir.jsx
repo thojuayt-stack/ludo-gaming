@@ -54,6 +54,7 @@ export default function Decouvrir({ onOpenGame }) {
   const [genreMode, setGenreMode] = useState(null); // { key, label } | null
   const [genreResults, setGenreResults] = useState([]);
   const [genreLoading, setGenreLoading] = useState(false);
+  const [genreError, setGenreError] = useState(null);
 
   async function markPresence(games) {
     const entries = await Promise.all(games.map(async (g) => [g.igdbId, await isInLibrary(g.igdbId)]));
@@ -114,12 +115,13 @@ export default function Decouvrir({ onOpenGame }) {
     setGenreMode(tile);
     setGenreLoading(true);
     setGenreResults([]);
+    setGenreError(null);
     try {
       const games = await getTrending({ genre: tile.key });
       setGenreResults(games);
       markPresence(games);
     } catch {
-      setGenreResults([]);
+      setGenreError("Impossible de charger ce genre, réessaie.");
     } finally {
       setGenreLoading(false);
     }
@@ -216,7 +218,13 @@ export default function Decouvrir({ onOpenGame }) {
         <>
           <div className="mb-2 flex items-center gap-2 px-4">
             <span className="text-xs text-faint">Genre :</span>
-            <button className="btn-glass px-3 py-1 text-xs" onClick={() => setGenreMode(null)}>
+            <button
+              className="btn-glass px-3 py-1 text-xs"
+              onClick={() => {
+                setGenreMode(null);
+                setGenreError(null);
+              }}
+            >
               {genreMode.label} ✕
             </button>
           </div>
@@ -226,7 +234,8 @@ export default function Decouvrir({ onOpenGame }) {
               Chargement…
             </div>
           )}
-          {!genreLoading && genreResults.length === 0 && (
+          {genreError && <p className="mx-4 mb-3 text-sm text-negative">{genreError}</p>}
+          {!genreLoading && !genreError && genreResults.length === 0 && (
             <p className="px-4 text-sm text-faint">Aucun jeu trouvé pour ce genre pour l'instant.</p>
           )}
           <ul className="flex flex-col gap-2 px-4">

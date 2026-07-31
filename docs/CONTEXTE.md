@@ -333,5 +333,23 @@ données), suite à un retour utilisateur avec capture annotée :
   genres très répandus, « Basé sur tes genres » peut afficher presque les mêmes jeux que
   « Tendances » (les plus gros titres du pool sont presque tous tagués "Adventure" sur IGDB) —
   à revisiter si gênant à l'usage.
-- Non vérifié à l'écran (testé uniquement par appel direct au proxy) : les genres Action,
-  Aventure, Stratégie, Indé de « Parcourir par genre » — seuls RPG et Sport cliqués dans l'UI.
+
+### Livraison 11 — Vérification complète Découvrir/Onboarding + gestion d'erreur genre (2026-07-30)
+Suite au test « go tester dans le navigateur », deuxième passage de vérification couvrant les 4
+genres restants (Action, Aventure, Stratégie, Indé — RPG et Sport avaient été cliqués au chantier
+précédent) :
+- Les 6 genres de « Parcourir par genre » cliqués dans l'interface confirmés pertinents :
+  Action (regroupement éditorial) → GTA V, God of War, Half-Life 2 ; Stratégie → Warcraft III,
+  StarCraft, Civilization V ; Indé → Hollow Knight, Hades, Celeste ; Aventure → même pool que
+  Tendances (cohérent, Adventure est un tag très large sur IGDB, voir limite déjà notée).
+- **Bug trouvé et corrigé** : des clics rapprochés sur plusieurs genres pendant le test ont fait
+  dépasser le rate-limit IGDB (502 côté proxy), et l'erreur était silencieusement avalée —
+  l'écran affichait « Aucun jeu trouvé pour ce genre » comme si le genre était réellement vide.
+  `Decouvrir.jsx` a maintenant un état d'erreur dédié à la navigation par genre (même pattern que
+  l'erreur de recherche classique) : « Impossible de charger ce genre, réessaie » au lieu du
+  message d'état vide trompeur.
+- Testé isolément après correctif (un seul clic à la fois, pas de rafale) : Stratégie et Indé
+  fonctionnent parfaitement, confirmant que le 502 était bien transitoire (rate-limit) et non un
+  bug de requête.
+- `onboarding_seen_v1` remis à zéro après vérification pour que l'utilisateur voie l'écran par
+  lui-même ; aucune donnée de test ajoutée à la bibliothèque pendant ce passage.

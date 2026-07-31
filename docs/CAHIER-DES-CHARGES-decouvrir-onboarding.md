@@ -178,18 +178,21 @@ Vérifiée en conditions réelles (Twitch/IGDB connectés via `vercel dev`, pas 
 - [x] La recherche classique (résultats + Sheet complète) reste inchangée pendant tout ce
       chantier — vérifié avec « hades ».
 - [x] `npm test` passe : 55 tests (dont les 9 nouveaux : `topNFrequent` ×2, `discover-pure.test.js` ×7).
+- [x] Les 6 genres de « Parcourir par genre » cliqués dans l'interface renvoient des résultats
+      pertinents : RPG, Action, Aventure, Stratégie, Indé, Sport.
 
-**Bug trouvé et corrigé pendant la vérification** : le bouton `+` compact des tuiles tendance
-(`.add-dot`) était invisible (peint sous la jaquette, pas de `z-index`) — corrigé dans
-`globals.css`.
+**Deux bugs trouvés et corrigés pendant la vérification** :
+1. Le bouton `+` compact des tuiles tendance (`.add-dot`) était invisible (peint sous la
+   jaquette, pas de `z-index`) — corrigé dans `globals.css`.
+2. Des clics rapprochés sur plusieurs genres ont fait dépasser le rate-limit IGDB (502), et
+   l'erreur était silencieusement avalée : l'écran affichait « Aucun jeu trouvé pour ce genre »
+   comme si le genre était réellement vide, sans distinguer une vraie absence de résultats d'une
+   panne réseau. Corrigé : `Decouvrir.jsx` a maintenant un état d'erreur dédié à la navigation
+   par genre (même pattern que l'erreur de recherche classique), qui affiche « Impossible de
+   charger ce genre, réessaie » au lieu du message d'état vide.
 
 **Limite observée, non corrigée** (hors décision de cadrage, à trancher si ça gêne à l'usage) :
 avec une petite bibliothèque aux genres très répandus (Adventure, Indie...), « Basé sur tes
 genres » peut afficher la quasi-totalité des mêmes jeux que « Tendances de la semaine » — les
 plus gros titres du pool sont presque tous tagués Adventure sur IGDB. Pas de déduplication
 prévue au cadrage ; à revisiter si observé comme gênant en usage réel.
-
-Non vérifié à l'écran (couvert uniquement par le test manuel du endpoint, pas par un clic dans
-l'UI) : les genres Action, Aventure, Stratégie, Indé de « Parcourir par genre » — seuls RPG et
-Sport ont été cliqués dans l'interface, les 4 autres ont été vérifiés uniquement par appel direct
-au proxy pendant le cadrage.
