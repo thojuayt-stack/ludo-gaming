@@ -217,22 +217,77 @@ textarea.field { resize: vertical; }
 }
 
 /*
- * Variante icône au-dessus / texte en dessous (filtre de statut de la Bibliothèque) — même
- * gabarit que la barre de navigation basse (icône + petit libellé, toujours visibles, actif
- * seulement distingué par le fond). Classe séparée de .segment-item de base pour ne pas changer
- * les autres segments de l'app (Fiche jeu, Profil, Sheet d'ajout — restent une seule ligne de
- * texte).
+ * Filtre de statut (Bibliothèque) — grille à colonnes fixes (icônes qui ne bougent jamais) +
+ * pastille flottante qui glisse vers l'item actif, seul à afficher son libellé. Classes dédiées,
+ * séparées de .segment/.segment-item de base pour ne pas changer les autres segments de l'app.
  */
-.segment-item-stacked {
+.status-filter {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 9999px;
+  padding: 0.4rem;
+}
+.status-filter-item {
+  position: relative;
+  z-index: 2;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.15rem;
-  padding: 0.5rem 0.2rem;
+  height: 2.5rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: color 0.2s ease;
 }
-.segment-item-stacked svg { width: 1.15rem; height: 1.15rem; }
-.segment-item-stacked .label { font-size: 0.62rem; font-weight: 600; }
+.status-filter-item svg { width: 1.35rem; height: 1.35rem; }
+.status-filter-item.is-covered { color: transparent; }
+
+.status-indicator {
+  position: absolute;
+  top: 0.4rem;
+  left: 0;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0 0.85rem;
+  border-radius: 9999px;
+  z-index: 1;
+  background: var(--accent);
+  color: var(--accent-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  transition: transform 0.35s cubic-bezier(0.34, 1.2, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+.status-indicator svg { width: 1.15rem; height: 1.15rem; flex-shrink: 0; }
+.status-indicator span { font-size: 0.84rem; font-weight: 700; }
+
+/* Sonde invisible, jamais affichée : sert uniquement à mesurer la largeur icône+libellé de
+   l'item actif (même contenu que .status-indicator) sans jamais toucher au layout visible. */
+.status-filter-probe {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.85rem;
+  white-space: nowrap;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+.status-filter-probe svg { width: 1.15rem; height: 1.15rem; }
+
+/* Fondu rapide du contenu (Bibliothèque) au changement de filtre de statut. */
+.fade-content { opacity: 0; transition: opacity 0.2s ease; }
+.fade-content[data-visible="true"] { opacity: 1; }
 
 /* ── Domaine : jaquettes & statuts ── */
 .cover {

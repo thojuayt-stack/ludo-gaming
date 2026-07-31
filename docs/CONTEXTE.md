@@ -37,9 +37,12 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   l'app PlayStation — titre en gras et 1ʳᵉ plateforme sous chaque tuile), bascule Liste
   disponible (inchangée, compacte), filtre par statut
   (Tous/**À faire**/En cours/Terminé/Abandonné — « À faire » est le libellé affiché, la clé
-  interne reste `backlog`) avec une icône par statut, affichée au-dessus du libellé (même
-  gabarit que la barre de navigation basse : icône + petit texte toujours visibles, l'actif
-  distingué uniquement par son fond), navigable aussi par glissement tactile gauche/droite entre les
+  interne reste `backlog`) avec une icône par statut dans une grille à colonnes fixes (les
+  icônes ne bougent jamais) ; seul le statut actif affiche son libellé, dans une pastille
+  flottante qui glisse vers lui au clic (jamais de chevauchement partiel d'une icône voisine :
+  la pastille s'arrondit toujours à un nombre entier de colonnes, quitte à en recouvrir une
+  deuxième sur petit écran). Contenu de la liste en fondu rapide (0,2s) au changement de filtre.
+  Navigable aussi par glissement tactile gauche/droite entre les
   filtres. Un jeu non possédé affiche « Non possédé » à la place de son statut (toujours « À
   faire » dans ce cas) ; un jeu terminé affiche « Terminé ×N » sur sa pastille dès qu'il a été
   rejoué (`playCount > 1`), même libellé qu'à la Fiche jeu, en grille comme en liste. Sous
@@ -478,3 +481,28 @@ titre d'historique de la décision).
 - Vérifié en conditions réelles : les 5 icônes s'affichent, le clic sur un filtre (testé avec
   « À faire ») filtre toujours correctement la bibliothèque, aucune erreur console,
   `npm test` toujours à 57/57.
+
+### Livraison 18 — Pastille glissante sur le filtre de statut + fondu de contenu (2026-07-31)
+Retour sur la Livraison 17 (icône+texte toujours visibles) : l'utilisateur voulait finalement le
+comportement glissant exploré puis mis de côté — texte seulement sur l'actif, icônes des autres
+un peu agrandies, pastille jaune qui glisse au changement de filtre, contenu de la liste en
+fondu rapide (~0,2s) au changement. Reprend directement la logique déjà validée (et le correctif
+anti-chevauchement) de la maquette abandonnée à la Livraison 17, portée cette fois en vrai dans
+le code.
+- `src/screens/Bibliotheque.jsx` : nouveau composant `StatusFilterBar` — grille CSS à 5 colonnes
+  fixes (icônes qui ne bougent jamais, vérifié par mesure de position dans le vrai DOM, pas
+  seulement en maquette), pastille flottante positionnée/dimensionnée via `getBoundingClientRect`
+  (`useLayoutEffect`, pas d'animation au tout premier rendu), sonde invisible pour mesurer la
+  largeur icône+libellé sans jamais toucher au layout visible. Même correctif qu'en maquette :
+  la pastille s'arrondit à un nombre entier de colonnes et masque proprement toute icône
+  qu'elle recouvre (`is-covered`), jamais de chevauchement partiel — revérifié sur petit écran
+  (375px) où « À faire » a besoin de 2 colonnes et recouvre « En cours » proprement.
+  Recalcul au redimensionnement de la fenêtre (`resize`).
+- `src/styles/globals.css` : `.segment-item-stacked` (Livraison 17, devenue inutile) remplacée
+  par `.status-filter`/`.status-filter-item`/`.status-indicator`/`.status-filter-probe`, et
+  nouvelle classe `.fade-content` (opacité 0↔1, transition 0.2s) appliquée au conteneur de la
+  liste de jeux, pilotée par l'état de chargement (`items === null` pendant le rechargement).
+- Vérifié en conditions réelles avec les 5 jeux de l'utilisateur : icônes statiques dans les 5
+  états (mesure précise, positions identiques au pixel près), pastille glissante fonctionnelle,
+  « Abandonné » ne chevauche plus « Terminé », fondu de contenu visible au changement de filtre,
+  aucune erreur console, `npm test` toujours à 57/57 (aucune logique pure touchée).
