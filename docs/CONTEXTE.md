@@ -76,6 +76,13 @@ terminal, `vercel dev --listen 3000` (proxy IGDB, nécessite `.env.local` avec
 `TWITCH_CLIENT_ID`/`TWITCH_CLIENT_SECRET` — voir la section Twitch du cahier des charges du
 chantier 1).
 
+**Déployée en ligne** : [ludotheque-five.vercel.app](https://ludotheque-five.vercel.app)
+(projet Vercel `optimumstack/ludotheque`, variables `TWITCH_CLIENT_ID`/`TWITCH_CLIENT_SECRET`
+configurées sur Production+Preview via le dashboard). Dépôt GitHub :
+[thojuayt-stack/ludo-gaming](https://github.com/thojuayt-stack/ludo-gaming) — pas encore
+connecté en déploiement continu, chaque mise en ligne se fait pour l'instant via `vercel --prod`
+en local après un `git push`.
+
 **Périmètre MVP** : entièrement construit. Reste hors périmètre (V2, décidé au cadrage) :
 compte, base en ligne, social. Import/restauration d'un export JSON et rétrospective annuelle
 ont été explicitement écartés du chantier Profil (voir son cahier des charges).
@@ -391,3 +398,29 @@ nouveau design), suite à un retour utilisateur avec capture annotée.
   Hunt » et « Red Dead Redemption 2 », tous deux rejoués 3 fois (`playCount: 3`, confirmé par
   lecture directe d'IndexedDB), affichent bien « Terminé ×3 » sur leur pastille en grille comme
   en liste, lisible avec le fond sombre unifié (Livraison 9).
+
+### Livraison 14 — Premier déploiement en ligne (2026-07-30)
+Retouche opérationnelle, aucun changement de code : l'utilisateur voulait tester l'app sur son
+téléphone au-delà du même Wi-Fi.
+- Variables d'environnement `TWITCH_CLIENT_ID`/`TWITCH_CLIENT_SECRET` ajoutées par l'utilisateur
+  sur le dashboard Vercel (Production + Preview) — jamais manipulées par Claude, conformément à
+  la règle du projet sur les secrets.
+- Déploiement production lancé (`vercel --prod`) depuis le projet déjà lié
+  `optimumstack/ludotheque` : [ludotheque-five.vercel.app](https://ludotheque-five.vercel.app).
+- Vérifié en conditions réelles : page d'accueil et proxy IGDB (`/api/igdb/search`) répondent
+  correctement en production, résultats réels pour « zelda ».
+- Pas de déploiement continu configuré (dépôt GitHub pas encore connecté au projet Vercel) —
+  chaque mise à jour en ligne nécessite de relancer `vercel --prod` manuellement après un
+  `git push`.
+
+### Livraison 15 — Icône / logo de l'app (2026-07-30)
+- Logo fourni par l'utilisateur (`~/Downloads/logo.png`, 2048×2048), décliné en plusieurs
+  tailles avec `sips` dans `public/` : `favicon.png` (32×32), `apple-touch-icon.png` (180×180),
+  `icon-192.png`/`icon-512.png` (PWA).
+- `index.html` : liens `icon`/`apple-touch-icon`/`manifest` ajoutés. Nouveau
+  `public/manifest.webmanifest` (nom, couleurs, icônes) pour que l'icône apparaisse aussi lors
+  d'un "Ajouter à l'écran d'accueil" sur mobile — cohérent avec l'intention PWA déjà actée dans
+  ce document, jamais construite jusqu'ici.
+- Vérifié : les 5 fichiers (`favicon.png`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`,
+  `manifest.webmanifest`) répondent 200 en local ; `<link>` du `<head>` pointent vers les bons
+  fichiers.
