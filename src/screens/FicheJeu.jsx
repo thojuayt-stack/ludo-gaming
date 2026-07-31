@@ -6,6 +6,7 @@ import { daysUntil, isUnreleased } from "../lib/wishlist-pure.js";
 import Cover from "../components/Cover.jsx";
 import Countdown from "../components/Countdown.jsx";
 import AjouterSheet from "../components/AjouterSheet.jsx";
+import { ControllerIcon } from "../components/icons.jsx";
 
 const SUMMARY_COLLAPSE_THRESHOLD = 220;
 
@@ -119,17 +120,25 @@ export default function FicheJeu({ igdbId, onBack }) {
           title={game.title}
           coverUrl={game.coverUrl}
           fit="contain"
-          className="aspect-[3/4] w-28 flex-shrink-0"
+          className="aspect-[3/4] w-28 flex-shrink-0 shadow-xl"
         />
-        <div className="min-w-0 flex-1">
-          <h1 className="text-xl font-semibold">{game.title}</h1>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {game.platforms.map((p) => <span key={p} className="plat">{p}</span>)}
-            {game.genres.map((g) => <span key={g} className="plat">{g}</span>)}
-          </div>
-          <p className="mt-2 text-sm text-muted">{releaseLabel}</p>
+        <div className="min-w-0 flex-1 flex flex-col justify-center">
+          <h1 className="text-2xl font-extrabold leading-tight tracking-tight">{game.title}</h1>
+          <p className="mt-1 text-sm font-semibold text-faint">{releaseLabel}</p>
+          {game.genres.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {game.genres.map((g) => <span key={g} className="tag">{g}</span>)}
+            </div>
+          )}
         </div>
       </div>
+
+      {game.platforms.length > 0 && (
+        <div className="meta-row px-4 pt-4">
+          <span className="ic"><ControllerIcon /></span>
+          <span>{game.platforms.join(" · ")}</span>
+        </div>
+      )}
 
       {game.summary && (
         <div className="px-4 pt-4">
@@ -153,7 +162,7 @@ export default function FicheJeu({ igdbId, onBack }) {
 
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-muted">Je possède ce jeu</span>
-              <div className="segment flex">
+              <div className="segment big flex">
                 <button
                   type="button"
                   className="segment-item flex-1"
@@ -181,7 +190,7 @@ export default function FicheJeu({ igdbId, onBack }) {
             </label>
 
             {entry.possede && (
-              <div className="segment flex">
+              <div className="segment big flex">
                 {STATUSES.map((s) => (
                   <button
                     key={s}
@@ -204,7 +213,7 @@ export default function FicheJeu({ igdbId, onBack }) {
                     <button
                       type="button"
                       key={p}
-                      className="plat"
+                      className="chip"
                       data-active={(entry.platforms || []).includes(p)}
                       onClick={() => handleTogglePlatform(p)}
                     >
@@ -224,7 +233,7 @@ export default function FicheJeu({ igdbId, onBack }) {
                       <button
                         type="button"
                         key={p}
-                        className="plat"
+                        className="chip"
                         data-active={(entry.finishedPlatform || []).includes(p)}
                         onClick={() => handleToggleFinishedPlatform(p)}
                       >

@@ -286,6 +286,57 @@ button.plat[data-active="true"] {
   border-color: var(--accent);
 }
 
+/* Pastille de statut agrandie — grille Bibliothèque uniquement (jaquettes 2 colonnes). */
+.pill-lg { font-size: 0.74rem; padding: 0.32rem 0.7rem; }
+.pill-lg::before { width: 0.45rem; height: 0.45rem; }
+
+/*
+ * Tags/puces "inspiration PlayStation" — volontairement distincts de .plat/.segment pour ne
+ * pas agrandir les puces compactes utilisées ailleurs (résultats de recherche, listes,
+ * filtres Bibliothèque, thème Profil). Réservés à la Fiche jeu.
+ */
+.tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.3rem 0.65rem;
+  border-radius: 0.5rem;
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  color: var(--muted);
+}
+
+.chip {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.7rem;
+  background: var(--glass-bg);
+  border: 1.5px solid var(--glass-border);
+  color: var(--muted);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+button.chip[data-active="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: transparent;
+}
+
+.segment.big { padding: 4px; }
+.segment.big .segment-item { padding: 0.8rem 0.6rem; font-size: 0.9rem; }
+
+.meta-row { display: flex; align-items: center; gap: 0.7rem; font-size: 0.86rem; font-weight: 600; color: var(--foreground); }
+.meta-row .ic {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.6rem;
+  background: var(--glass-bg-strong);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+.meta-row .ic svg { width: 1.05rem; height: 1.05rem; }
+
 .stars { color: var(--accent); letter-spacing: 0.05em; }
 .stars .empty { color: var(--faint); }
 
@@ -400,22 +451,22 @@ button.plat[data-active="true"] {
 /* Countdown réhabillé en badge compact posé sur une jaquette de tuile grille (Bibliothèque). */
 .countdown-badge {
   position: absolute;
-  top: 0.4rem;
-  right: 0.4rem;
+  top: 0.55rem;
+  right: 0.55rem;
   z-index: 2;
-  border-radius: 0.6rem;
-  padding: 0.25rem 0.4rem;
+  border-radius: 0.7rem;
+  padding: 0.3rem 0.5rem;
   background: color-mix(in srgb, var(--accent) 22%, rgba(0, 0, 0, 0.55));
   backdrop-filter: blur(6px);
 }
 .countdown-badge .countdown { text-align: center; }
-.countdown-badge .d { font-size: 0.82rem; }
+.countdown-badge .d { font-size: 0.9rem; }
 .countdown-badge .u { color: rgba(255, 255, 255, 0.85); font-weight: 700; }
 .countdown-badge .label {
-  font-size: 0.58rem;
+  font-size: 0.62rem;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.9);
-  max-width: 3.6rem;
+  max-width: 4.2rem;
   white-space: normal;
   text-align: center;
 }

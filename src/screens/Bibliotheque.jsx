@@ -23,12 +23,13 @@ function GameGridTile({ entry, game, onOpen, showCountdown }) {
           <Countdown days={daysUntil(game?.releaseDate ?? null)} releaseDate={game?.releaseDate} />
         </span>
       ) : (
-        <span className={`pill pill-${entry.status} absolute left-1.5 top-1.5 z-10`}>
+        <span className={`pill pill-lg pill-${entry.status} absolute left-2 top-2 z-10`}>
           {statusPillLabel(entry.status, entry.possede, entry.playCount)}
         </span>
       )}
-      <Cover title={game?.title} coverUrl={game?.coverUrl} className="aspect-[3/4] w-full" />
-      <figcaption className="mt-1.5 text-xs font-semibold leading-tight">{game?.title}</figcaption>
+      <Cover title={game?.title} coverUrl={game?.coverUrl} className="aspect-[3/4] w-full shadow-lg" />
+      <figcaption className="mt-2 text-sm font-bold leading-tight tracking-tight">{game?.title}</figcaption>
+      {game?.platforms?.[0] && <p className="mt-0.5 text-xs font-semibold text-faint">{game.platforms[0]}</p>}
     </figure>
   );
 }
@@ -61,7 +62,7 @@ function GameListRow({ entry, game, onOpen, showCountdown }) {
 
 function GameGrid({ items, onOpenGame, showCountdown }) {
   return (
-    <div className="grid grid-cols-3 gap-2.5 px-4">
+    <div className="grid grid-cols-2 gap-3.5 px-4">
       {items.map(({ entry, game }) => (
         <GameGridTile key={entry.igdbId} entry={entry} game={game} onOpen={onOpenGame} showCountdown={showCountdown} />
       ))}

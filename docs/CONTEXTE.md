@@ -33,7 +33,9 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   Texte d'accueil + section « Ajoute ton premier jeu » réutilisant les mêmes tendances que
   Découvrir (même ajout en un tap). Bouton **Passer** ou **Aller à ma bibliothèque** pour
   entrer dans l'app normale.
-- **Bibliothèque** : vue Grille par défaut (bascule Liste disponible), filtre par statut
+- **Bibliothèque** : vue Grille par défaut, **2 colonnes** (jaquettes larges, style inspiré de
+  l'app PlayStation — titre en gras et 1ʳᵉ plateforme sous chaque tuile), bascule Liste
+  disponible (inchangée, compacte), filtre par statut
   (Tous/**À faire**/En cours/Terminé/Abandonné — « À faire » est le libellé affiché, la clé
   interne reste `backlog`), navigable aussi par glissement tactile gauche/droite entre les
   filtres. Un jeu non possédé affiche « Non possédé » à la place de son statut (toujours « À
@@ -49,13 +51,16 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   Ce mois-ci / Plus tard, calculée en jours glissants), countdown adapté (jours si ≤60j,
   mois/année au-delà, « Date TBD » sinon), indicateur de fraîcheur + bouton Actualiser, retrait
   avec confirmation (retire complètement l'entrée).
-- **Fiche jeu** : mise en page côte à côte — jaquette entière et nette à gauche (sans rognage,
-  `object-fit: contain`), infos à droite, synopsis en dessous. Bloc « Mon suivi » unique
-  (2 cas : le jeu est dans la bibliothèque, ou pas encore ajouté) avec toggle possession,
-  statut (si possédé), plateformes possédées, plateforme(s) de complétion (**plusieurs
-  possibles**, pastilles à cocher comme les plateformes possédées) + compteur « Terminé ×N » +
-  bouton **Recommencer** (si terminé), note/commentaire (si possédé, jamais effacés si on
-  décoche possession — juste masqués), retrait avec confirmation.
+- **Fiche jeu** : mise en page côte à côte (inchangée depuis Livraison 5) — jaquette entière et
+  nette à gauche (sans rognage, `object-fit: contain`), infos à droite : titre en gras, date de
+  sortie en sous-titre, genres en tags ; plateformes du jeu en ligne icône + texte sous le hero.
+  Synopsis en dessous. Bloc « Mon suivi » unique (2 cas : le jeu est dans la bibliothèque, ou pas
+  encore ajouté), habillage inspiré de l'app PlayStation (boutons de possession/statut et puces
+  de plateformes agrandis) avec toggle possession, statut (si possédé), plateformes possédées,
+  plateforme(s) de complétion (**plusieurs possibles**, pastilles à cocher comme les plateformes
+  possédées) + compteur « Terminé ×N » + bouton **Recommencer** (si terminé), note/commentaire
+  (si possédé, jamais effacés si on décoche possession — juste masqués), retrait avec
+  confirmation.
 - **Profil** : donut + 4 tuiles de statistiques calculées localement (jeux terminés, plateforme
   et genre les plus fréquents — la plateforme utilise en priorité celles cochées comme
   possédées, note moyenne — « — » si rien à calculer plutôt qu'un NaN), réglage d'apparence
@@ -424,3 +429,29 @@ téléphone au-delà du même Wi-Fi.
 - Vérifié : les 5 fichiers (`favicon.png`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`,
   `manifest.webmanifest`) répondent 200 en local ; `<link>` du `<head>` pointent vers les bons
   fichiers.
+
+### Livraison 16 — Refonte visuelle inspirée de l'app PlayStation (2026-07-31)
+- Cahier des charges rédigé et validé :
+  [CAHIER-DES-CHARGES-refonte-playstation.md](CAHIER-DES-CHARGES-refonte-playstation.md),
+  maquette [mockups/bibliotheque-fiche-jeu-playstation.html](../mockups/bibliotheque-fiche-jeu-playstation.html),
+  suite à deux captures d'écran de l'app PlayStation fournies par l'utilisateur. Décision de
+  cadrage actée avant la maquette : la disposition de la Fiche jeu (jaquette gauche/infos droite,
+  Livraison 5) est conservée, seul l'habillage visuel change — IGDB ne fournissant ni bannière
+  paysage, ni nom de studio, ni captures d'écran, ni PEGI, ces éléments PlayStation ne sont pas
+  repris (donnée indisponible).
+- `src/styles/globals.css` : nouvelles classes isolées pour ne pas impacter le reste de l'app —
+  `.pill-lg` (pastille de statut agrandie, grille uniquement), `.tag` (genres, Fiche jeu),
+  `.chip`/`.chip[data-active]` (plateformes à cocher, Fiche jeu, remplace `.plat` à cet endroit
+  précis), `.segment.big` (boutons possession/statut agrandis, Fiche jeu), `.meta-row` (ligne
+  icône + texte). `.plat`/`.segment` par défaut inchangés (toujours utilisés ailleurs : listes,
+  recherche, filtres Bibliothèque, thème Profil).
+- `src/screens/Bibliotheque.jsx` : grille passée de 3 à 2 colonnes, légende de tuile agrandie en
+  gras + nouvelle ligne affichant la première plateforme (absente auparavant en vue grille).
+- `src/screens/FicheJeu.jsx` : titre agrandi, date de sortie en sous-titre sous le titre (au lieu
+  d'un paragraphe après les tags), genres en tags dédiés, plateformes du jeu déplacées dans une
+  ligne icône (`ControllerIcon`) + texte sous le hero. Aucun changement de comportement/données.
+- Vérifié en conditions réelles sur les 5 jeux de l'utilisateur : grille 2 colonnes, Fiche jeu de
+  The Witcher 3 (genres en tags, plateformes en ligne icône, boutons Mon suivi agrandis),
+  interaction de cocher/décocher une plateforme testée (Switch ajouté puis retiré, comportement
+  identique à avant) ; vue liste et Découvrir vérifiés inchangés ; aucune erreur console ;
+  `npm test` toujours à 57/57 (aucune logique pure touchée).
