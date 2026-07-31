@@ -37,9 +37,12 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   l'app PlayStation — titre en gras et 1ʳᵉ plateforme sous chaque tuile), bascule Liste
   disponible (inchangée, compacte), filtre par statut
   (Tous/**À faire**/En cours/Terminé/Abandonné — « À faire » est le libellé affiché, la clé
-  interne reste `backlog`) avec une icône par statut, affichée au-dessus du libellé (même
-  gabarit que la barre de navigation basse : icône + petit texte toujours visibles, l'actif
-  distingué uniquement par son fond), navigable aussi par glissement tactile gauche/droite entre les
+  interne reste `backlog`) avec une icône par statut ; seul l'actif affiche son libellé (fondu
+  croisé au changement), les autres n'ont que leur icône (légèrement agrandie), dans un
+  sélecteur qui glisse (CSS pur, translateX en %) au lieu de changer instantanément. L'icône
+  d'un onglet qui se désélectionne descend se centrer verticalement dans sa tuile (et remonte
+  quand il redevient actif) — décalage mesuré au montage, pas une valeur devinée. Navigable
+  aussi par glissement tactile gauche/droite entre les
   filtres. Un jeu non possédé affiche « Non possédé » à la place de son statut (toujours « À
   faire » dans ce cas) ; un jeu terminé affiche « Terminé ×N » sur sa pastille dès qu'il a été
   rejoué (`playCount > 1`), même libellé qu'à la Fiche jeu, en grille comme en liste. Sous
@@ -478,3 +481,31 @@ titre d'historique de la décision).
 - Vérifié en conditions réelles : les 5 icônes s'affichent, le clic sur un filtre (testé avec
   « À faire ») filtre toujours correctement la bibliothèque, aucune erreur console,
   `npm test` toujours à 57/57.
+
+### Livraison 18 — Sélecteur glissant sur le filtre de statut (2026-07-31)
+Retour sur la Livraison 17 : après un premier essai de sélecteur glissant jugé décevant par
+l'utilisateur (« on annule tout »), une maquette dédiée
+([mockups/status-filter-slide.html](../mockups/status-filter-slide.html)) a permis d'affiner le
+comportement point par point (alignement vertical des icônes précisé à partir d'une capture
+annotée), validée puis codée pour de vrai.
+- `src/screens/Bibliotheque.jsx` : nouveau composant `StatusFilterBar`. Le sélecteur (pastille
+  d'accent) glisse en CSS pur (`translateX` en `%`, relatif à sa propre largeur = 1/5 du
+  conteneur) — aucune mesure de layout ni recalcul au redimensionnement nécessaire,
+  contrairement aux tentatives précédentes. Seul l'onglet actif affiche son libellé (fondu
+  croisé, léger décalage pour éviter le chevauchement visuel) ; les icônes inactives sont
+  légèrement agrandies (1.15rem → 1.35rem).
+- Détail clé (retour utilisateur précis avec capture annotée) : l'icône d'un onglet qui se
+  désélectionne doit visuellement **descendre** se centrer dans sa tuile plutôt que rester figée
+  à sa position "au-dessus du texte" pendant que seul le texte disparaît en fondu. Résolu avec
+  un wrapper d'icône séparé, décalé en `translateY` (`--icon-shift`, mesuré une fois au montage
+  à partir de la hauteur réelle du label + du gap — jamais une valeur devinée à la main) :
+  actif = 0, inactif = décalé pour atterrir pile au centre vertical. Vérifié par mesure directe
+  du DOM : écart de 0px entre le centre de l'icône et le centre de sa tuile pour tout item
+  inactif, dans les deux sens de transition.
+- `src/styles/globals.css` : `.segment-item-stacked` remplacée par `.status-filter`/
+  `.status-filter-item`/`.status-filter-indicator`, classes dédiées (n'affectent pas les autres
+  segments de l'app).
+- Vérifié en conditions réelles sur les 5 jeux de l'utilisateur : filtrage toujours correct
+  (testé avec « En cours »), alignement vertical pixel-parfait mesuré dans le vrai DOM (pas
+  seulement en maquette), aucune erreur console, `npm test` toujours à 57/57 (aucune logique
+  pure touchée).

@@ -217,22 +217,64 @@ textarea.field { resize: vertical; }
 }
 
 /*
- * Variante icône au-dessus / texte en dessous (filtre de statut de la Bibliothèque) — même
- * gabarit que la barre de navigation basse (icône + petit libellé, toujours visibles, actif
- * seulement distingué par le fond). Classe séparée de .segment-item de base pour ne pas changer
- * les autres segments de l'app (Fiche jeu, Profil, Sheet d'ajout — restent une seule ligne de
- * texte).
+ * Filtre de statut (Bibliothèque) — dimensions identiques à un .segment/.segment-item classique
+ * (icône + libellé), mais avec un sélecteur qui glisse et seul l'actif affichant son texte.
+ * Classes dédiées pour ne pas changer les autres segments de l'app (Fiche jeu, Profil, Sheet
+ * d'ajout — restent une seule ligne de texte, fond statique).
  */
-.segment-item-stacked {
+.status-filter {
+  position: relative;
+  display: flex;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 9999px;
+}
+.status-filter-item {
+  position: relative;
+  z-index: 2;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.15rem;
   padding: 0.5rem 0.2rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 9999px;
+  cursor: pointer;
 }
-.segment-item-stacked svg { width: 1.15rem; height: 1.15rem; }
-.segment-item-stacked .label { font-size: 0.62rem; font-weight: 600; }
+.status-filter-item[data-active="true"] { color: var(--accent-ink); font-weight: 600; }
+
+/* Icône dans son propre wrapper pour pouvoir la décaler verticalement indépendamment du
+   libellé : inactive, elle descend de --icon-shift (mesuré au montage) pour se centrer
+   exactement dans la tuile ; active, translateY(0) = position actuelle (icône au-dessus du
+   texte). C'est ce décalage qui est animé, pas seulement l'opacité du texte. */
+.status-filter-item .icon-wrap { display: flex; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.status-filter-item:not([data-active="true"]) .icon-wrap { transform: translateY(var(--icon-shift, 0.45rem)); }
+.status-filter-item svg { width: 1.15rem; height: 1.15rem; transition: width 0.25s ease, height 0.25s ease; }
+.status-filter-item:not([data-active="true"]) svg { width: 1.35rem; height: 1.35rem; }
+
+.status-filter-item .label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.status-filter-item[data-active="true"] .label { opacity: 1; transition-delay: 0.12s; }
+
+.status-filter-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 20%;
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--accent);
+  z-index: 1;
+  transition: transform 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+}
 
 /* ── Domaine : jaquettes & statuts ── */
 .cover {

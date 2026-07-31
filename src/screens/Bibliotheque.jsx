@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { listLibraryEntries } from "../lib/library.js";
 import { STATUSES, STATUS_LABELS, statusPillLabel, splitBacklogByAvailability } from "../lib/library-pure.js";
 import { daysUntil } from "../lib/wishlist-pure.js";
@@ -21,6 +21,52 @@ const FILTER_ICONS = {
 };
 
 const SWIPE_MIN_DISTANCE = 60;
+
+/**
+ * Filtre de statut : sélecteur qui glisse en CSS pur (translateX en %, relatif à sa propre
+ * largeur = 1/5 du conteneur — aucune mesure de layout, donc intrinsèquement responsive).
+ * Seul l'actif affiche son libellé ; l'icône d'un item qui se désélectionne descend se centrer
+ * verticalement dans la tuile (et remonte quand il redevient actif) via --icon-shift, mesuré
+ * une fois au montage à partir de la hauteur réelle du label + du gap.
+ */
+function StatusFilterBar({ filters, active, labels, icons, onChange }) {
+  const barRef = useRef(null);
+  const labelRef = useRef(null);
+  const activeIndex = filters.indexOf(active);
+
+  useLayoutEffect(() => {
+    const bar = barRef.current;
+    const label = labelRef.current;
+    if (!bar || !label) return;
+    const gap = parseFloat(getComputedStyle(bar.querySelector(".status-filter-item")).rowGap || "0");
+    const shift = (gap + label.getBoundingClientRect().height) / 2;
+    bar.style.setProperty("--icon-shift", `${shift}px`);
+  }, []);
+
+  return (
+    <div className="status-filter" ref={barRef}>
+      <div className="status-filter-indicator" style={{ transform: `translateX(${activeIndex * 100}%)` }} />
+      {filters.map((f) => {
+        const Icon = icons[f];
+        const isActive = f === active;
+        return (
+          <button
+            key={f}
+            type="button"
+            className="status-filter-item"
+            data-active={isActive}
+            onClick={() => onChange(f)}
+            aria-pressed={isActive}
+            aria-label={labels[f]}
+          >
+            <span className="icon-wrap"><Icon /></span>
+            <span className="label" ref={f === filters[0] ? labelRef : undefined}>{labels[f]}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 function GameGridTile({ entry, game, onOpen, showCountdown }) {
   return (
@@ -174,22 +220,7 @@ export default function Bibliotheque({ onOpenGame, onNavigate }) {
       />
 
       <div className="mb-3 px-4">
-        <div className="segment flex">
-          {FILTERS.map((f) => {
-            const Icon = FILTER_ICONS[f];
-            return (
-              <button
-                key={f}
-                className="segment-item segment-item-stacked flex-1"
-                data-active={filter === f}
-                onClick={() => setFilter(f)}
-              >
-                <Icon />
-                <span className="label">{FILTER_LABELS[f]}</span>
-              </button>
-            );
-          })}
-        </div>
+        <StatusFilterBar filters={FILTERS} active={filter} labels={FILTER_LABELS} icons={FILTER_ICONS} onChange={setFilter} />
       </div>
 
       <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
