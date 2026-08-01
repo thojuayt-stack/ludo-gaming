@@ -125,7 +125,7 @@ export default function FicheJeu({ igdbId, onBack }) {
           className="aspect-[3/4] w-28 flex-shrink-0 shadow-xl"
         />
         <div className="min-w-0 flex-1 flex flex-col justify-center">
-          <h1 className="text-2xl font-extrabold leading-tight tracking-tight">{game.title}</h1>
+          <h1 className="page-title text-2xl font-extrabold leading-tight tracking-tight">{game.title}</h1>
           <p className="mt-1 text-sm font-semibold text-faint">{releaseLabel}</p>
           {game.genres.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
@@ -155,7 +155,7 @@ export default function FicheJeu({ igdbId, onBack }) {
 
       {entry ? (
         <>
-          <div className="glass mx-4 mt-5 flex flex-col gap-4 rounded-3xl p-4">
+          <div className="glass glow-border mx-4 mt-5 flex flex-col gap-4 rounded-3xl p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-faint">Mon suivi</p>
 
             {!entry.possede && isUnreleased(game.releaseDate) && (

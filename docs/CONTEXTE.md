@@ -85,6 +85,16 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   jeux déjà suivis seraient apparus comme non possédés après la mise à jour (bug réel trouvé et
   corrigé pendant la vérification de ce chantier).
 
+**Identité visuelle** : palette néon/LED (magenta `#ff3ec8` / cyan `#34e0ff` en sombre,
+assombrie en `#d61aa6`/`#0891b2` en clair pour rester lisible), sur le même système "Liquid
+Glass" que précédemment — bordures/texte des éléments actifs (bouton primaire, indicateur de
+filtre, switch, pastilles de statut, étoiles, nav active) avec un léger halo, fond avec 2 taches
+qui respirent doucement en continu ; tout est coupé net si `prefers-reduced-motion: reduce`. Les
+halos de texte sont désactivés en thème clair (illisibles sur fond clair). Choix de couleur par
+l'utilisateur dans les paramètres : pas encore fait (chantier 2, palettes alternatives déjà
+définies en CSS mais non exposées). Voir
+[CAHIER-DES-CHARGES-refonte-neon.md](CAHIER-DES-CHARGES-refonte-neon.md).
+
 **Comment lancer l'app en local** : `npm run dev` (Vite, port 5173) **et**, dans un autre
 terminal, `vercel dev --listen 3000` (proxy IGDB, nécessite `.env.local` avec
 `TWITCH_CLIENT_ID`/`TWITCH_CLIENT_SECRET` — voir la section Twitch du cahier des charges du
@@ -556,3 +566,40 @@ déjà validées), suite à trois retours utilisateur sur une même capture anno
   plateformes de complétion selon l'état, aucune erreur console. Toggle également vérifié dans
   la Sheet d'ajout (`AjouterSheet.jsx`, ouverte depuis un résultat Découvrir) : bascule Oui ↔ Non,
   masque bien statut/note/commentaire quand décoché.
+
+### Livraison 20 — Refonte visuelle « Néon / LED » (2026-08-01)
+- Maquette autonome [mockups/neon-led-refonte.html](../mockups/neon-led-refonte.html) validée
+  par l'utilisateur (« j'adore »), à partir de deux planches néon/arcade fournies. Décisions de
+  cadrage : palette par défaut Magenta/Cyan, retouche de toute l'app en un chantier, thème clair
+  adapté (pas laissé de côté). Cahier des charges :
+  [CAHIER-DES-CHARGES-refonte-neon.md](CAHIER-DES-CHARGES-refonte-neon.md).
+- `src/styles/globals.css` : retheme complet des tokens (`--accent`/`--accent-ink`/`--bg-base`/
+  `--bg-blob-1/2`, neutres) en dark **et** light, nouveau token `--accent-2` (halo secondaire).
+  L'accent clair est délibérément plus sombre/saturé que le sombre (même principe que l'ambre
+  précédent) pour rester au-dessus de 4.5:1 de contraste — un rose/cyan à pleine saturation
+  échoue ce ratio sur fond clair.
+  Nouvelles classes `.glow-border` et animation partagée `neon-pulse`, halo ajouté sur
+  `.btn-primary`, `.status-filter-indicator`, `.toggle-switch[data-active]`, `.pill::before`,
+  `.stars`, `.chip[data-active]`, `.plat[data-active]`, item actif de `.bottom-nav`, nouvelle
+  classe `.page-title` (titres de page). Respiration du fond via `.app-bg::after` (calque séparé,
+  jamais d'opacité nulle). Toutes les animations dans des blocs
+  `@media (prefers-reduced-motion: no-preference)`, même convention que l'existant
+  (`.spinner`, `.glass-interactive:active`).
+  Halos de **texte** désactivés en thème clair (`.stars`, `.page-title`, item actif de la nav) —
+  un `text-shadow` coloré derrière du texte sombre sur fond clair produit un flou illisible, pas
+  un effet néon ; les halos de **bordure**/`box-shadow` restent (déjà adoucis par l'accent clair
+  plus sombre).
+  Couleurs fixes des pastilles de statut (`.pill-*`) inchangées — déjà indépendantes du thème
+  avant ce chantier, pas de token à modifier.
+- `src/components/PageHeader.jsx`, `src/screens/FicheJeu.jsx` : classe `.page-title` sur les
+  titres de page ; classe `.glow-border` ajoutée uniquement sur la carte « Mon suivi » de la
+  Fiche jeu (pas sur le bloc « Pas encore suivi », qui reste un `.glass` simple).
+- Aucun changement de disposition, de logique ou de composant React au-delà de ces classes —
+  uniquement CSS + tokens, `src/lib/` non touché.
+- Vérifié en conditions réelles (`npm run dev`, IndexedDB vide) : Onboarding, Bibliothèque
+  (vide), Découvrir, Profil — dark et light (bascule via le réglage Apparence du Profil) — glow
+  visible et cohérent, thème clair lisible sans flou de texte, aucune erreur console. Fiche jeu
+  non vérifiée avec de vraies données (proxy IGDB non lancé en local, limitation connue —
+  `vercel dev` non démarré pour cette vérification) ; classes CSS confirmées par lecture du code
+  et par le composant équivalent dans la maquette validée.
+- `npm test` → 65 tests, tous verts (aucune logique pure modifiée).
