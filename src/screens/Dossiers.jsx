@@ -208,6 +208,7 @@ function NewFolderSheet({ onClose, onCreate }) {
 function AddGamesToFolderSheet({ folder, libraryItems, onClose, onToggle }) {
   const [query, setQuery] = useState("");
   const filtered = filterGamesByTitle(libraryItems, query);
+  const selectedCount = folder.gameIds.length;
 
   return (
     <Sheet title={`Ajouter des jeux — ${folder.name}`} onClose={onClose}>
@@ -220,7 +221,7 @@ function AddGamesToFolderSheet({ folder, libraryItems, onClose, onToggle }) {
           onChange={(e) => setQuery(e.target.value)}
         />
       </div>
-      <ul className="flex flex-col gap-2 px-4 pb-2">
+      <ul className={`flex flex-col gap-2 px-4 ${selectedCount > 0 ? "pb-24" : "pb-2"}`}>
         {filtered.map(({ entry, game }) => {
           const checked = folder.gameIds.includes(entry.igdbId);
           return (
@@ -244,11 +245,16 @@ function AddGamesToFolderSheet({ folder, libraryItems, onClose, onToggle }) {
         })}
         {filtered.length === 0 && <p className="px-1 py-4 text-sm text-faint">Aucun jeu ne correspond.</p>}
       </ul>
-      <div className="px-4 pb-1 pt-2">
-        <button className="btn-primary w-full" onClick={onClose}>
-          Terminé
-        </button>
-      </div>
+      {selectedCount > 0 && (
+        <div
+          className="sticky bottom-0 z-10 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-6"
+          style={{ background: "linear-gradient(to top, var(--glass-bg-strong) 55%, transparent)" }}
+        >
+          <button className="btn-primary w-full" onClick={onClose}>
+            Valider {selectedCount} jeu{selectedCount > 1 ? "x" : ""}
+          </button>
+        </div>
+      )}
     </Sheet>
   );
 }
