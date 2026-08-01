@@ -58,8 +58,8 @@ export default function Onboarding({ onDone, onOpenGame }) {
       )}
 
       <div className="onboarding-footer flex gap-3">
-        <button className="btn-glass flex-1" onClick={onDone}>Passer</button>
-        <button className="btn-primary flex-1" onClick={onDone}>Aller à ma bibliothèque</button>
+        <button className="btn-glass flex-shrink-0 px-5 text-sm" onClick={onDone}>Passer</button>
+        <button className="btn-primary flex-1 text-sm" onClick={onDone}>Aller à ma bibliothèque</button>
       </div>
     </div>
   );
