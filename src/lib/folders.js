@@ -1,5 +1,5 @@
 import { foldersDb } from "./db.js";
-import { sortByCreatedAtAsc, moveGameInOrder } from "./folders-pure.js";
+import { sortByCreatedAtAsc } from "./folders-pure.js";
 
 export { foldersContainingGame, filterGamesByTitle } from "./folders-pure.js";
 
@@ -49,14 +49,11 @@ export async function removeGameFromFolder(folderId, igdbId) {
   return updated;
 }
 
-export async function reorderGameInFolder(folderId, igdbId, delta) {
+/** Remplace l'ordre complet des jeux d'un dossier (issu d'un glisser-déposer). */
+export async function setFolderGameOrder(folderId, gameIds) {
   const folder = await getFolder(folderId);
   if (!folder) return null;
-  const updated = {
-    ...folder,
-    gameIds: moveGameInOrder(folder.gameIds, igdbId, delta),
-    updatedAt: Date.now(),
-  };
+  const updated = { ...folder, gameIds, updatedAt: Date.now() };
   await foldersDb.set(folderId, updated);
   return updated;
 }

@@ -99,14 +99,14 @@ références à des jeux qui n'existent plus nulle part ailleurs dans l'app.
 - Liste des jeux de `gameIds`, **dans l'ordre stocké**, chaque ligne :
   - Numéro de rang (1, 2, 3...), jaquette, titre, statut (même pastille/libellé que la
     Bibliothèque, `statusPillLabel`).
-  - Deux flèches ↑/↓ empilées pour déplacer le jeu d'un cran (échange avec le voisin) ; flèche
-    du haut désactivée sur le 1er jeu, flèche du bas désactivée sur le dernier. Pas de
-    glisser-déposer (voir *Variantes écartées*).
+  - **Poignée de glisser-déposer** (retour utilisateur, amendement post-livraison — voir en fin
+    de document) : appui sur la poignée puis glissement vers le haut/bas pour réordonner ;
+    persisté au relâchement.
   - Bouton retirer (« × ») : sort le jeu de ce dossier (`removeGameFromFolder`) sans toucher à sa
     `LibraryEntry` ni aux autres dossiers.
 - **Dossier sans aucun jeu** : état vide dans la zone de liste, invitant à ajouter des jeux,
   bouton **Ajouter des jeux** (ouvre la même Sheet que le bouton **+** de l'en-tête).
-- Tap sur une ligne (hors flèches/bouton retirer) → ouvre la Fiche jeu de ce jeu, par-dessus
+- Tap sur une ligne (hors poignée/bouton retirer) → ouvre la Fiche jeu de ce jeu, par-dessus
   l'écran Dossiers (même pattern que l'ouverture d'une Fiche jeu depuis la Bibliothèque : l'écran
   actif reste monté, `onOpenGame` déjà utilisé ailleurs).
 - Bouton **Supprimer ce dossier** en bas d'écran : retrait avec confirmation (même pattern léger
@@ -129,7 +129,7 @@ références à des jeux qui n'existent plus nulle part ailleurs dans l'app.
   - Cocher/décocher bascule immédiatement l'appartenance (`addGameToFolder`/
     `removeGameFromFolder`) — pas de bouton de validation intermédiaire par ligne.
   - Un jeu ajouté rejoint la **fin** de `gameIds` (ordre = ordre d'ajout par défaut, modifiable
-    ensuite par les flèches).
+    ensuite par glisser-déposer).
 - Bouton **Terminé** en bas : ferme simplement la Sheet (tout est déjà enregistré au fil des
   clics, comme le toggle possession de la Fiche jeu).
 
@@ -147,10 +147,6 @@ références à des jeux qui n'existent plus nulle part ailleurs dans l'app.
 
 ## Variantes écartées
 
-- **Glisser-déposer pour réordonner** — écarté pour ce chantier au profit des flèches ↑/↓ :
-  plus simple et fiable sur tactile (pas de conflit avec le scroll vertical de la liste, pas de
-  librairie de drag à intégrer), suffisant pour le besoin exprimé (ordre de préférence / prochain
-  jeu). Pourra être reconsidéré si l'usage réel le réclame.
 - **Renommer un dossier après création** — écarté de ce chantier : ni demandé, ni présent dans la
   maquette validée. Seuls la création (avec nom) et la suppression existent pour l'instant.
 - **Dossiers imbriqués / sous-dossiers** — écarté : le besoin exprimé est une organisation à plat
@@ -197,9 +193,8 @@ Aucune migration nécessaire : nouvelle base vide, pas de donnée préexistante 
 - [ ] Ajouter un jeu à un dossier depuis la Fiche jeu fait apparaître la chip correspondante, et
       le jeu apparaît bien dans le dossier depuis l'écran Dossiers (les deux entrées convergent).
 - [ ] Un même jeu ajouté à 2 dossiers différents apparaît bien dans les deux, indépendamment.
-- [ ] Les flèches ↑/↓ réordonnent la liste d'un dossier ; la flèche du haut est désactivée en
-      1re position, celle du bas en dernière position ; l'ordre résiste à un rechargement complet
-      de la page (persistance IndexedDB réelle).
+- [x] Glisser-déposer depuis la poignée réordonne la liste d'un dossier (voir amendement) ;
+      l'ordre résiste à un rechargement complet de la page (persistance IndexedDB réelle).
 - [ ] Retirer un jeu d'un dossier ne le retire pas de la Bibliothèque ni des autres dossiers.
 - [ ] Retirer un jeu de la Bibliothèque (Fiche jeu) le fait disparaître automatiquement de tous
       les dossiers où il apparaissait.
@@ -208,3 +203,42 @@ Aucune migration nécessaire : nouvelle base vide, pas de donnée préexistante 
 - [ ] Thème clair et sombre : grille, détail et Sheets lisibles, glow cohérent avec le reste de
       l'app.
 - [ ] `npm test` toujours vert (bancs d'essai `folders-pure.test.js` inclus).
+
+## Amendement — glisser-déposer au lieu des flèches (2026-08-01)
+
+Retour utilisateur après livraison : « la gestion de l'ordre peut-elle se faire en appui prolongé
+puis glissé, comme sur téléphone ? ». Remplace la section *Écran Dossiers — détail* et l'entrée
+« Glisser-déposer » de *Variantes écartées* ci-dessus, qui l'avait écarté au profit des flèches
+↑/↓ — le risque identifié à l'époque (conflit avec le scroll vertical) ne s'applique pas ici
+puisque le geste part d'une **poignée dédiée** (icône grip, colonne dédiée à droite de chaque
+ligne), pas de la ligne entière : le scroll normal de la liste et le tap pour ouvrir la Fiche jeu
+restent inchangés partout ailleurs sur la ligne.
+
+- Choix de portée tranché avec l'utilisateur : la poignée **remplace** les flèches (pas de
+  coexistence des deux).
+- Comportement : `pointerdown` sur la poignée capture le pointeur (`setPointerCapture`) et amorce
+  le suivi ; `pointermove` déplace visuellement la ligne tenue (translation CSS suivant le doigt)
+  et décale ses voisines pour indiquer où elle atterrirait, calculé à partir de la hauteur d'une
+  ligne mesurée au début du geste — aucune ligne n'est réellement déplacée dans le DOM pendant le
+  glissement, seul un `transform` change (évite d'avoir à remesurer les positions à chaque frame).
+  Au relâchement (`pointerup`/`pointercancel`), le nouvel ordre est calculé une seule fois et
+  persisté (`setFolderGameOrder`, remplace `gameIds` en une seule écriture plutôt qu'une série
+  d'échanges pas à pas).
+- `touch-action: none` sur la poignée empêche le navigateur d'interpréter le geste comme un scroll
+  tactile une fois amorcé.
+- **Régression assumée** : le réordonnancement n'est plus opérable au clavier/lecteur d'écran
+  (les flèches ↑/↓ l'étaient, via leur `aria-label` et leur focus natif de `<button>`). Signalé à
+  l'utilisateur au moment du choix (remplacer vs garder les deux) ; retenu quand même, l'usage
+  ciblé étant tactile mobile.
+- Fichiers modifiés : `src/lib/folders-pure.js` (`moveGameInOrder` → `reorderList`, indexé plutôt
+  que delta ±1), `src/lib/folders.js` (`reorderGameInFolder` → `setFolderGameOrder`),
+  `src/screens/Dossiers.jsx` (nouveau `DraggableFolderList`, remplace `FolderGameRow` + les
+  boutons flèche), `src/components/icons.jsx` (`GripIcon` ajouté, `ChevronUpIcon`/
+  `ChevronDownIcon` retirés, devenus inutilisés), `src/styles/globals.css` (`.drag-handle`,
+  `.game-row-dragging` ; `.order-btn`/`.order-btns` retirées).
+- Vérifié en conditions réelles (`npm run dev`, jeux de test injectés en IndexedDB, glissement
+  simulé à la souris dans le navigateur) : glissement d'un cran précis (échange exact avec le
+  voisin), glissement sur plusieurs crans dans les deux sens (up et down), ordre persisté après
+  rechargement complet de la page, tap sur le reste de la ligne toujours fonctionnel (ouvre la
+  Fiche jeu, aucun conflit avec la poignée), aucune erreur console. `npm test` → 76/76,
+  `npm run build` propre.

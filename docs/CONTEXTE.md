@@ -63,7 +63,8 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   classement automatique par plateforme/genre) — un jeu peut appartenir à plusieurs dossiers en
   même temps. Écran liste (grille 2 colonnes, vignette en collage de jusqu'à 4 jaquettes — 1 seule
   jaquette pleine largeur si un seul jeu, icône dossier générique si vide) et écran détail
-  (réordonnancement par flèches ↑/↓, numéro de rang affiché, retrait d'un jeu sans le retirer de
+  (réordonnancement par glisser-déposer depuis une poignée dédiée — appui puis glissement
+  haut/bas, persisté au relâchement —, numéro de rang affiché, retrait d'un jeu sans le retirer de
   la Bibliothèque, suppression du dossier avec confirmation — ne supprime jamais les jeux qu'il
   contenait). Ajout d'un jeu à un dossier possible depuis deux points d'entrée équivalents :
   l'écran Dossiers (Sheet avec recherche locale et cases à cocher sur toute la bibliothèque) et la
@@ -723,3 +724,50 @@ intermédiaire) — pas de nouveau cahier des charges, retrait pur d'un statut e
 - Poussé sur `origin/main` et déployé en production
   ([ludotheque-five.vercel.app](https://ludotheque-five.vercel.app)) directement après
   vérification, conformément à la consigne explicite de l'utilisateur.
+
+### Livraison 24 — Dossiers : glisser-déposer au lieu des flèches (2026-08-01)
+Retour utilisateur (« la gestion de l'ordre peut-elle se faire en appui prolongé puis glissé,
+comme sur téléphone ? ») — amendement documenté dans
+[CAHIER-DES-CHARGES-dossiers.md](CAHIER-DES-CHARGES-dossiers.md) plutôt que nouveau cahier des
+charges séparé, la fonctionnalité (réordonner un dossier) existait déjà, seule l'interaction
+change. Portée tranchée avec l'utilisateur : la poignée de glisser-déposer **remplace**
+entièrement les flèches ↑/↓ (pas de coexistence).
+- `src/lib/folders-pure.js` : `moveGameInOrder` (delta ±1) remplacée par `reorderList(list,
+  fromIndex, toIndex)`, plus générale (position absolue, nécessaire pour un glisser qui peut
+  franchir plusieurs positions d'un coup) — 6 tests mis à jour dans `folders-pure.test.js`.
+  `src/lib/folders.js` : `reorderGameInFolder` (échange pas à pas) remplacée par
+  `setFolderGameOrder(folderId, gameIds)` (remplace tout l'ordre en une seule écriture,
+  correspond mieux à un glisser qui ne se résout qu'au relâchement).
+- `src/screens/Dossiers.jsx` : nouveau composant `DraggableFolderList` (Pointer Events natifs,
+  `setPointerCapture` sur une poignée dédiée par ligne — aucune librairie de drag ajoutée,
+  cohérent avec le reste de l'app fait main). Pendant le glissement, les lignes ne sont **pas**
+  réordonnées dans le DOM : seule une translation CSS (`transform`) déplace la ligne tenue en
+  suivant le doigt et décale ses voisines pour indiquer où elle atterrirait, à partir de la
+  hauteur d'une ligne mesurée au début du geste. Le nouvel ordre n'est calculé et persisté qu'au
+  relâchement (`pointerup`/`pointercancel`) — pas d'écriture IndexedDB à chaque frame.
+  `touch-action: none` sur la poignée empêche le scroll tactile de concurrencer le geste une fois
+  amorcé ; le reste de la ligne (tap pour ouvrir la Fiche jeu) et le scroll normal de la liste
+  restent inchangés, la poignée étant un élément séparé — c'est justement ce qui rendait le
+  glisser-déposer risqué sur la ligne entière (écarté au chantier précédent) sans risque ici.
+- `src/components/icons.jsx` : nouvelle icône `GripIcon` (poignée à 6 points) ;
+  `ChevronUpIcon`/`ChevronDownIcon` retirées (plus aucun usage). `src/styles/globals.css` :
+  `.drag-handle`/`.game-row-dragging` ajoutées, `.order-btn`/`.order-btns` retirées (`.order-rank`
+  conservée, le numéro de rang reste affiché).
+- **Régression assumée, signalée à l'utilisateur avant le choix** : le réordonnancement n'est
+  plus opérable au clavier/lecteur d'écran (les flèches avaient un focus natif de `<button>` et un
+  `aria-label` ; la poignée ne répond qu'au pointeur). Retenu quand même — usage ciblé tactile
+  mobile.
+- Vérifié en conditions réelles (`npm run dev`, jeux de test injectés en IndexedDB, glissement
+  simulé à la souris dans le navigateur — 5 jeux dans un dossier) : glissement d'un cran précis
+  (échange exact avec le voisin immédiat), glissement de plusieurs crans dans les deux sens (haut
+  et bas), ordre persisté après un rechargement complet de la page (relecture IndexedDB réelle),
+  tap sur le reste de la ligne toujours fonctionnel (ouvre la Fiche jeu, aucun conflit avec la
+  poignée), aucune erreur console. `npm test` → 76/76, `npm run build` propre. Données de test
+  retirées après vérification.
+- **Limite connue de la vérification** : les glissements simulés à la souris dans l'automatisation
+  du navigateur ont montré une magnitude de déplacement parfois inférieure à celle demandée sur de
+  longs glissements (probable lissage/interpolation de l'outil de simulation, la précision est
+  exacte sur un glissement d'un cran) — logique de calcul (delta de position / hauteur de ligne)
+  vérifiée correcte à la main ; un glissement réel au doigt sur téléphone n'a pas ce défaut
+  d'interpolation (position réelle du doigt à chaque évènement). À reconfirmer sur un vrai
+  appareil tactile si l'utilisateur note un écart au premier usage.

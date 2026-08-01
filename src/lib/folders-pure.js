@@ -5,17 +5,16 @@ export function sortByCreatedAtAsc(folders) {
 }
 
 /**
- * Déplace un igdbId d'un cran dans la liste ordonnée d'un dossier (delta : -1 ou 1). Renvoie
- * la même référence (inchangée) si l'id est absent ou si le déplacement sort des bornes —
- * c'est ce qui permet aux flèches ↑/↓ de se désactiver en tête/fin de liste sans logique dupliquée.
+ * Déplace l'élément en `fromIndex` jusqu'en `toIndex` (glisser-déposer d'un dossier) — les
+ * éléments entre les deux se décalent d'un cran, sans échange simple. Bornes hors limites
+ * ramenées dans l'intervalle valide ; ne mute jamais la liste d'origine.
  */
-export function moveGameInOrder(gameIds, igdbId, delta) {
-  const index = gameIds.indexOf(igdbId);
-  if (index === -1) return gameIds;
-  const target = index + delta;
-  if (target < 0 || target >= gameIds.length) return gameIds;
-  const next = [...gameIds];
-  [next[index], next[target]] = [next[target], next[index]];
+export function reorderList(list, fromIndex, toIndex) {
+  const clampedTo = Math.min(Math.max(toIndex, 0), list.length - 1);
+  if (fromIndex === clampedTo || fromIndex < 0 || fromIndex >= list.length) return list;
+  const next = [...list];
+  const [item] = next.splice(fromIndex, 1);
+  next.splice(clampedTo, 0, item);
   return next;
 }
 

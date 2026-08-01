@@ -869,21 +869,34 @@ nav.bottom-nav .nav-fab[data-active="true"] .nav-fab-circle {
 .add-folder-card svg { width: 1.4rem; height: 1.4rem; }
 
 .order-rank { width: 1.4rem; flex-shrink: 0; text-align: center; font-size: 0.78rem; font-weight: 700; color: var(--faint); }
-.order-btns { display: flex; flex-direction: column; gap: 0.15rem; flex-shrink: 0; }
-.order-btn {
-  width: 1.6rem;
-  height: 1.15rem;
-  border-radius: 0.4rem;
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
+
+/*
+ * Poignée de réordonnancement des jeux dans un dossier (glisser-déposer, remplace les
+ * flèches ↑/↓). `touch-action: none` empêche le scroll tactile natif de concurrencer le
+ * glissement une fois amorcé (le doigt reste maître du geste dès qu'il touche la poignée).
+ */
+.drag-handle {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: transparent;
   display: grid;
   place-items: center;
-  color: var(--muted);
-  cursor: pointer;
-  padding: 0;
+  color: var(--faint);
+  cursor: grab;
+  touch-action: none;
+  flex-shrink: 0;
 }
-.order-btn:disabled { opacity: 0.25; cursor: default; }
-.order-btn svg { width: 0.7rem; height: 0.7rem; }
+.drag-handle:active { cursor: grabbing; color: var(--muted); }
+.drag-handle svg { width: 1.15rem; height: 1.15rem; }
+
+.game-row-dragging {
+  position: relative;
+  z-index: 5;
+  background: var(--glass-bg-strong);
+  box-shadow: 0 10px 26px -8px var(--glass-shadow);
+}
 
 .row-action {
   width: 2rem;

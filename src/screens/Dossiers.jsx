@@ -1,20 +1,21 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { listLibraryEntries } from "../lib/library.js";
 import { getGame } from "../lib/igdb.js";
+import { reorderList } from "../lib/folders-pure.js";
 import {
   listFolders,
   createFolder,
   deleteFolder,
   addGameToFolder,
   removeGameFromFolder,
-  reorderGameInFolder,
+  setFolderGameOrder,
   filterGamesByTitle,
 } from "../lib/folders.js";
 import PageHeader from "../components/PageHeader.jsx";
 import Sheet from "../components/Sheet.jsx";
 import Cover from "../components/Cover.jsx";
 import StatusPill from "../components/StatusPill.jsx";
-import { FolderIcon, ChevronUpIcon, ChevronDownIcon, XIcon, CheckIcon } from "../components/icons.jsx";
+import { FolderIcon, GripIcon, XIcon, CheckIcon } from "../components/icons.jsx";
 
 function FolderCard({ folder, itemById, onOpen }) {
   const covers = folder.gameIds
@@ -46,35 +47,124 @@ function FolderCard({ folder, itemById, onOpen }) {
   );
 }
 
-function FolderGameRow({ rank, entry, game, isFirst, isLast, onOpen, onMove, onRemove }) {
+/**
+ * Liste des jeux d'un dossier, réordonnable au doigt depuis la poignée (glisser vers le haut/
+ * bas). Pendant le glissement, l'ordre DOM ne change pas — seule une translation CSS déplace la
+ * ligne tenue et décale ses voisines pour indiquer où elle atterrirait ; le nouvel ordre n'est
+ * calculé et persisté qu'au relâchement (`onReorder`). Ce choix (plutôt que réordonner le DOM en
+ * continu) évite d'avoir à remesurer les positions à chaque frame.
+ */
+function DraggableFolderList({ rows, onOpen, onRemove, onReorder }) {
+  const rowRefs = useRef(new Map());
+  const [drag, setDrag] = useState(null);
+
+  function targetIndexFor(d) {
+    if (!d) return null;
+    const rawShift = Math.round(d.deltaY / d.slotHeight);
+    return Math.min(Math.max(d.startIndex + rawShift, 0), d.order.length - 1);
+  }
+
+  function handlePointerDown(e, igdbId) {
+    e.preventDefault();
+    const startIndex = rows.findIndex((r) => r.entry.igdbId === igdbId);
+    const node = rowRefs.current.get(igdbId);
+    if (startIndex === -1 || !node) return;
+
+    let slotHeight = node.getBoundingClientRect().height + 8; // hauteur + gap-2 (0.5rem), repli si un seul jeu
+    if (rows.length > 1) {
+      const neighborIndex = startIndex === 0 ? 1 : startIndex - 1;
+      const neighborNode = rowRefs.current.get(rows[neighborIndex].entry.igdbId);
+      if (neighborNode) {
+        const gap = Math.abs(node.getBoundingClientRect().top - neighborNode.getBoundingClientRect().top);
+        if (gap > 0) slotHeight = gap;
+      }
+    }
+
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setDrag({
+      igdbId,
+      pointerId: e.pointerId,
+      startY: e.clientY,
+      deltaY: 0,
+      startIndex,
+      order: rows.map((r) => r.entry.igdbId),
+      slotHeight,
+    });
+  }
+
+  function handlePointerMove(e) {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    setDrag((d) => (d ? { ...d, deltaY: e.clientY - d.startY } : d));
+  }
+
+  function handlePointerEnd(e) {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    const finalIndex = targetIndexFor(drag);
+    setDrag(null);
+    if (finalIndex !== drag.startIndex) {
+      onReorder(reorderList(drag.order, drag.startIndex, finalIndex));
+    }
+  }
+
+  const targetIndex = targetIndexFor(drag);
+
   return (
-    <li className="glass glass-interactive flex items-center gap-3 rounded-3xl p-3">
-      <span className="order-rank">{rank}</span>
-      <div className="flex min-w-0 flex-1 cursor-pointer items-center gap-3" onClick={() => onOpen(entry.igdbId)}>
-        <Cover title={game?.title} coverUrl={game?.coverUrl} className="h-14 w-14" />
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold">{game?.title}</h3>
-          <div className="mt-1">
-            <StatusPill status={entry.status} possede={entry.possede} playCount={entry.playCount} />
-          </div>
-        </div>
-      </div>
-      <div className="order-btns">
-        <button className="order-btn" disabled={isFirst} aria-label="Monter" onClick={() => onMove(entry.igdbId, -1)}>
-          <ChevronUpIcon />
-        </button>
-        <button className="order-btn" disabled={isLast} aria-label="Descendre" onClick={() => onMove(entry.igdbId, 1)}>
-          <ChevronDownIcon />
-        </button>
-      </div>
-      <button
-        className="row-action"
-        aria-label={`Retirer ${game?.title || "ce jeu"} du dossier`}
-        onClick={() => onRemove(entry.igdbId)}
-      >
-        <XIcon />
-      </button>
-    </li>
+    <ul className="flex flex-col gap-2 px-4">
+      {rows.map(({ entry, game }, i) => {
+        const isDragging = drag?.igdbId === entry.igdbId;
+        let transform;
+        if (drag && targetIndex != null) {
+          if (isDragging) {
+            transform = `translateY(${drag.deltaY}px)`;
+          } else {
+            const lo = Math.min(drag.startIndex, targetIndex);
+            const hi = Math.max(drag.startIndex, targetIndex);
+            if (i >= lo && i <= hi) {
+              transform = targetIndex > drag.startIndex ? `translateY(${-drag.slotHeight}px)` : `translateY(${drag.slotHeight}px)`;
+            }
+          }
+        }
+        return (
+          <li
+            key={entry.igdbId}
+            ref={(node) => {
+              if (node) rowRefs.current.set(entry.igdbId, node);
+              else rowRefs.current.delete(entry.igdbId);
+            }}
+            className={`glass glass-interactive flex items-center gap-3 rounded-3xl p-3 ${isDragging ? "game-row-dragging" : ""}`}
+            style={{ transform, transition: isDragging ? "none" : "transform 0.18s ease" }}
+          >
+            <span className="order-rank">{i + 1}</span>
+            <div className="flex min-w-0 flex-1 cursor-pointer items-center gap-3" onClick={() => onOpen(entry.igdbId)}>
+              <Cover title={game?.title} coverUrl={game?.coverUrl} className="h-14 w-14" />
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-sm font-semibold">{game?.title}</h3>
+                <div className="mt-1">
+                  <StatusPill status={entry.status} possede={entry.possede} playCount={entry.playCount} />
+                </div>
+              </div>
+            </div>
+            <button
+              className="drag-handle"
+              aria-label={`Réordonner ${game?.title || "ce jeu"} (glisser)`}
+              onPointerDown={(e) => handlePointerDown(e, entry.igdbId)}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerEnd}
+              onPointerCancel={handlePointerEnd}
+            >
+              <GripIcon />
+            </button>
+            <button
+              className="row-action"
+              aria-label={`Retirer ${game?.title || "ce jeu"} du dossier`}
+              onClick={() => onRemove(entry.igdbId)}
+            >
+              <XIcon />
+            </button>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -217,8 +307,8 @@ export default function Dossiers({ onOpenGame }) {
     applyFolderUpdate(updated);
   }
 
-  async function handleMoveGame(igdbId, delta) {
-    const updated = await reorderGameInFolder(selectedFolderId, igdbId, delta);
+  async function handleReorderGames(nextGameIds) {
+    const updated = await setFolderGameOrder(selectedFolderId, nextGameIds);
     applyFolderUpdate(updated);
   }
 
@@ -253,21 +343,12 @@ export default function Dossiers({ onOpenGame }) {
             </button>
           </div>
         ) : (
-          <ul className="flex flex-col gap-2 px-4">
-            {rows.map(({ entry, game }, i) => (
-              <FolderGameRow
-                key={entry.igdbId}
-                rank={i + 1}
-                entry={entry}
-                game={game}
-                isFirst={i === 0}
-                isLast={i === rows.length - 1}
-                onOpen={onOpenGame}
-                onMove={handleMoveGame}
-                onRemove={handleRemoveGameFromFolder}
-              />
-            ))}
-          </ul>
+          <DraggableFolderList
+            rows={rows}
+            onOpen={onOpenGame}
+            onRemove={handleRemoveGameFromFolder}
+            onReorder={handleReorderGames}
+          />
         )}
 
         <div className="px-4 pb-2 pt-5">

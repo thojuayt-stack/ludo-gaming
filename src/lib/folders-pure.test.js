@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   sortByCreatedAtAsc,
-  moveGameInOrder,
+  reorderList,
   foldersContainingGame,
   filterGamesByTitle,
 } from "./folders-pure.js";
@@ -14,30 +14,35 @@ test("sortByCreatedAtAsc trie du plus ancien au plus récent sans muter l'entré
   assert.deepEqual(folders.map((f) => f.createdAt), [3, 1, 2]); // original inchangé
 });
 
-test("moveGameInOrder échange avec le voisin suivant", () => {
-  const result = moveGameInOrder(["a", "b", "c"], "a", 1);
-  assert.deepEqual(result, ["b", "a", "c"]);
+test("reorderList déplace un élément vers l'avant", () => {
+  const result = reorderList(["a", "b", "c", "d"], 0, 2);
+  assert.deepEqual(result, ["b", "c", "a", "d"]);
 });
 
-test("moveGameInOrder échange avec le voisin précédent", () => {
-  const result = moveGameInOrder(["a", "b", "c"], "c", -1);
-  assert.deepEqual(result, ["a", "c", "b"]);
+test("reorderList déplace un élément vers l'arrière", () => {
+  const result = reorderList(["a", "b", "c", "d"], 3, 1);
+  assert.deepEqual(result, ["a", "d", "b", "c"]);
 });
 
-test("moveGameInOrder ne fait rien si déjà en tête/fin de liste", () => {
+test("reorderList ne fait rien si la position d'arrivée est identique", () => {
   const list = ["a", "b", "c"];
-  assert.deepEqual(moveGameInOrder(list, "a", -1), list);
-  assert.deepEqual(moveGameInOrder(list, "c", 1), list);
+  assert.deepEqual(reorderList(list, 1, 1), list);
 });
 
-test("moveGameInOrder ne fait rien si l'id est absent", () => {
-  const list = ["a", "b", "c"];
-  assert.deepEqual(moveGameInOrder(list, "z", 1), list);
+test("reorderList ramène une position d'arrivée hors bornes dans l'intervalle valide", () => {
+  const result = reorderList(["a", "b", "c"], 0, 99);
+  assert.deepEqual(result, ["b", "c", "a"]);
 });
 
-test("moveGameInOrder ne mute pas la liste d'origine", () => {
+test("reorderList ne fait rien si la position de départ est invalide", () => {
   const list = ["a", "b", "c"];
-  moveGameInOrder(list, "a", 1);
+  assert.deepEqual(reorderList(list, -1, 1), list);
+  assert.deepEqual(reorderList(list, 5, 1), list);
+});
+
+test("reorderList ne mute pas la liste d'origine", () => {
+  const list = ["a", "b", "c"];
+  reorderList(list, 0, 2);
   assert.deepEqual(list, ["a", "b", "c"]);
 });
 
