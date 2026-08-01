@@ -4,6 +4,7 @@ import { getLibraryEntry, updateLibraryEntry, removeFromLibrary } from "../lib/l
 import { STATUSES, STATUS_LABELS, completionLabel, isOwnershipLocked } from "../lib/library-pure.js";
 import { daysUntil, isUnreleased } from "../lib/wishlist-pure.js";
 import { listFolders, foldersContainingGame, removeGameFromFolder } from "../lib/folders.js";
+import { useBackLevel } from "../lib/backNav.js";
 import Cover from "../components/Cover.jsx";
 import Countdown from "../components/Countdown.jsx";
 import AjouterSheet from "../components/AjouterSheet.jsx";
@@ -25,6 +26,8 @@ export default function FicheJeu({ igdbId, onBack }) {
   const [showAddSheet, setShowAddSheet] = useState(false);
   const [folders, setFolders] = useState([]);
   const [showAddToFolderSheet, setShowAddToFolderSheet] = useState(false);
+
+  useBackLevel(true, onBack);
 
   const reload = useCallback(async () => {
     setLoadError(null);

@@ -1,4 +1,11 @@
+import { useBackLevel } from "../lib/backNav.js";
+
 export default function Sheet({ title, onClose, closable = true, children }) {
+  useBackLevel(true, () => {
+    if (!closable) return false; // retour ignoré pendant un envoi en cours, comme le tap sur le fond
+    onClose();
+  });
+
   return (
     <div
       className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 backdrop-blur-sm"

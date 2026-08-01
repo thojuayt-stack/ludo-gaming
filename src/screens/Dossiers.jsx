@@ -11,6 +11,7 @@ import {
   setFolderGameOrder,
   filterGamesByTitle,
 } from "../lib/folders.js";
+import { useBackLevel } from "../lib/backNav.js";
 import PageHeader from "../components/PageHeader.jsx";
 import Sheet from "../components/Sheet.jsx";
 import Cover from "../components/Cover.jsx";
@@ -266,6 +267,8 @@ export default function Dossiers({ onOpenGame }) {
   const [showNewFolderSheet, setShowNewFolderSheet] = useState(false);
   const [showAddGamesSheet, setShowAddGamesSheet] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  useBackLevel(selectedFolderId != null, () => setSelectedFolderId(null));
 
   const reload = useCallback(async () => {
     const [f, entries] = await Promise.all([listFolders(), listLibraryEntries()]);

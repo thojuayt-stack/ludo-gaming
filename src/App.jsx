@@ -1,5 +1,6 @@
 import { useState } from "react";
 import BottomNav from "./components/BottomNav.jsx";
+import ExitWarningToast from "./components/ExitWarningToast.jsx";
 import Bibliotheque from "./screens/Bibliotheque.jsx";
 import Decouvrir from "./screens/Decouvrir.jsx";
 import Avenir from "./screens/Avenir.jsx";
@@ -8,6 +9,7 @@ import Profil from "./screens/Profil.jsx";
 import FicheJeu from "./screens/FicheJeu.jsx";
 import Onboarding from "./screens/Onboarding.jsx";
 import { hasSeenOnboarding, markOnboardingSeen } from "./lib/onboarding.js";
+import { pushBackLevel } from "./lib/backNav.js";
 
 const SCREENS = {
   biblio: Bibliotheque,
@@ -24,6 +26,9 @@ export default function App() {
 
   function selectTab(nextTab) {
     setSelectedGameId(null);
+    // Note : effet de bord volontaire dans un gestionnaire d'événement classique (pas dans une
+    // fonction de mise à jour de state, que le mode strict de React invoque deux fois en dev).
+    if (nextTab !== tab) pushBackLevel(() => setTab(tab));
     setTab(nextTab);
   }
 
@@ -64,6 +69,7 @@ export default function App() {
         )}
       </div>
       <div className="nav-fade" aria-hidden="true" />
+      <ExitWarningToast />
       <BottomNav active={tab} onSelect={selectTab} />
     </>
   );

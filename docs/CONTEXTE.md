@@ -67,7 +67,9 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   haut/bas, persisté au relâchement —, numéro de rang affiché, retrait d'un jeu sans le retirer de
   la Bibliothèque, suppression du dossier avec confirmation — ne supprime jamais les jeux qu'il
   contenait). Ajout d'un jeu à un dossier possible depuis deux points d'entrée équivalents :
-  l'écran Dossiers (Sheet avec recherche locale et cases à cocher sur toute la bibliothèque) et la
+  l'écran Dossiers (Sheet avec recherche locale et cases à cocher sur toute la bibliothèque,
+  bouton de validation flottant qui apparaît dès la première case cochée pour ne pas avoir à
+  descendre en bas d'une liste potentiellement longue) et la
   Fiche jeu (bloc « Dossiers », chips + Sheet de sélection avec création de dossier à la volée).
   Retirer un jeu de la Bibliothèque le retire automatiquement (silencieusement) de tous ses
   dossiers.
@@ -90,6 +92,14 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   possédées, note moyenne — « — » si rien à calculer plutôt qu'un NaN), réglage d'apparence
   (Système/Clair/Sombre, persisté, avec script anti-flash dans `index.html`), export JSON
   complet (un seul tableau `library`, titres lisibles inclus).
+- **Bouton retour Android** (PWA en mode `standalone`) : ferme un niveau à la fois plutôt que de
+  fermer l'app directement — changement d'onglet (retrace l'historique exact des onglets
+  visités), Fiche jeu, détail d'un dossier, toute Sheet, dans cet ordre d'empilement. Depuis
+  l'état racine (Bibliothèque, rien d'ouvert, plus aucun onglet à dérouler en arrière), un 1er
+  retour affiche un toast d'avertissement (« Appuie de nouveau sur retour pour quitter ») au lieu
+  de fermer l'app ; un 2ᵉ retour dans les ~2 secondes ferme réellement l'app. Mécanisme central
+  dans `src/lib/backNav.js` (pile de niveaux + `history.pushState`/`popstate`), voir
+  [CAHIER-DES-CHARGES-bouton-retour-android.md](CAHIER-DES-CHARGES-bouton-retour-android.md).
 - Toutes les données personnelles sont en IndexedDB local, persistent après rechargement complet
   de la page. Le catalogue IGDB passe uniquement par le proxy serverless `api/igdb/*` (liste
   blanche stricte) — confirmé sans clé/token visible côté navigateur.
@@ -771,3 +781,70 @@ entièrement les flèches ↑/↓ (pas de coexistence).
   vérifiée correcte à la main ; un glissement réel au doigt sur téléphone n'a pas ce défaut
   d'interpolation (position réelle du doigt à chaque évènement). À reconfirmer sur un vrai
   appareil tactile si l'utilisateur note un écart au premier usage.
+
+### Livraison 25 — Dossiers : bouton de validation flottant (2026-08-01)
+Retouche sans nouveau cahier des charges (ajustement UX contenu, aucun impact sur le modèle de
+données), suite à un retour utilisateur avec capture annotée : dans la Sheet « Ajouter des jeux »
+d'un dossier, le bouton de validation était tout en bas de la liste, obligeant à descendre toute
+la bibliothèque pour le trouver.
+- `src/screens/Dossiers.jsx` (`AddGamesToFolderSheet`) : le bouton « Terminé » fixe en bas de
+  Sheet est remplacé par un bouton flottant `sticky bottom-0` (fondu de lisibilité au-dessus, même
+  ton que le fond du Sheet) qui apparaît dès la première case cochée (compteur « Valider N
+  jeu(x) ») et reste visible pendant le scroll de la liste ; absent quand rien n'est sélectionné
+  (fermeture toujours possible par le fond du Sheet).
+- Vérifié en conditions réelles (`npm run dev`, 20 jeux de test injectés en IndexedDB) : le bouton
+  apparaît dès la 1ère sélection sans avoir à scroller, reste collé en bas pendant le scroll,
+  compteur exact à 2 sélections, ferme le Sheet et les jeux apparaissent bien dans le dossier.
+  Données de test retirées après vérification.
+- Commité et poussé sur `origin/main`, déployé en production
+  ([ludotheque-five.vercel.app](https://ludotheque-five.vercel.app)) à la demande explicite de
+  l'utilisateur (« commit push deploie »).
+
+### Livraison 26 — Bouton retour Android (2026-08-01)
+Cahier des charges rédigé et validé :
+[CAHIER-DES-CHARGES-bouton-retour-android.md](CAHIER-DES-CHARGES-bouton-retour-android.md), suite
+à un retour utilisateur (le bouton retour Android fermait la PWA directement, aucune navigation
+interne). Chantier de comportement pur, pas de nouvel écran. Décision de cadrage actée avant le
+document : le changement d'onglet retrace l'historique exact des changements (pas un raccourci
+direct vers Bibliothèque).
+- `src/lib/backNav-pure.js` (nouveau) : `isExitConfirmWindowOpen(armedAt, now, windowMs)`, seule
+  partie testable sans navigateur — 3 tests (`backNav-pure.test.js`, `npm test` → 79 tests).
+- `src/lib/backNav.js` (nouveau) : pile de niveaux en mémoire + un seul écouteur `popstate`
+  global. Chaque niveau ouvert correspond à une entrée `history.pushState` ; `pushBackLevel`/
+  `closeBackLevel` pour l'ouverture/fermeture programmatique, hook `useBackLevel(active, onBack)`
+  (le niveau peut renvoyer `false` pour signaler « ne ferme pas encore, reste ouvert » — utilisé
+  par une Sheet non fermable pendant un envoi en cours), hook `useExitWarning()` pour le toast.
+- Seulement **4 points d'intégration** dans le code applicatif : `src/components/Sheet.jsx`
+  (`useBackLevel(closable, onClose)`, couvre automatiquement toutes les Sheets existantes sans les
+  modifier), `src/screens/FicheJeu.jsx` (`useBackLevel(true, onBack)`, couvre toutes les
+  ouvertures de Fiche jeu quel que soit l'écran d'origine), `src/screens/Dossiers.jsx`
+  (`useBackLevel(selectedFolderId != null, ...)` pour le détail d'un dossier), `src/App.jsx`
+  (`selectTab` pousse un niveau retraçable à chaque changement d'onglet réel, montage de
+  `<ExitWarningToast />`).
+- Nouveau composant `src/components/ExitWarningToast.jsx` + classe CSS `.exit-warning-toast`
+  (`globals.css`) : toast discret (`glass`, centré, au-dessus de la nav basse), affiché seulement
+  à l'état racine.
+- **Bug trouvé et corrigé pendant la vérification** : `selectTab` poussait initialement le niveau
+  d'historique depuis une fonction de mise à jour de state (`setTab((currentTab) => {...})`) —
+  React StrictMode (actif en dev, `src/main.jsx`) invoque deux fois ces fonctions pour détecter les
+  effets de bord non idempotents, doublant chaque changement d'onglet dans la pile. Corrigé en
+  lisant `tab` directement dans le gestionnaire de clic (effet de bord légitime hors d'une fonction
+  de mise à jour de state).
+- Vérifié en conditions réelles (`npm run dev`, onglet de navigateur neuf pour un historique
+  propre — un onglet réutilisé sur toute la session de test a un historique pollué par des
+  navigations précédentes, non représentatif d'un vrai lancement de PWA) : changement d'onglet
+  Bibliothèque → Dossiers → Profil puis 2 retours successifs revient bien par Dossiers puis
+  Bibliothèque (historique exact retracé, pas de saut) ; empilement Dossiers → détail d'un dossier
+  → Sheet « Ajouter des jeux » puis 2 retours ferment la Sheet puis le détail, dans l'ordre, sans
+  saut de niveau ; fermeture d'une Sheet via son propre bouton (pas retour) ne laisse aucun niveau
+  fantôme dans l'historique (retour suivant agit sur le bon niveau) ; à l'état racine, 1er retour
+  affiche le toast (vérifié via l'état interne du module et le DOM), 2e retour dans la fenêtre de
+  2s désarme sans se re-protéger. `npm test` → 79/79, `npm run build` propre.
+- **Non vérifié** : le comportement réel sur un téléphone Android (PWA installée en mode
+  standalone) — vérifié uniquement via simulation `history.back()`/`history.forward()` dans le
+  navigateur de test, qui reproduit fidèlement la mécanique `popstate` mais pas le geste tactile
+  natif ni la fermeture d'app elle-même (hors de portée du JavaScript par conception). À confirmer
+  par l'utilisateur sur son appareil.
+- **Hors scope assumé** (voir cahier des charges) : états de confirmation inline (retrait d'un jeu,
+  mode « genre » dans Découvrir) non interceptés par retour ; toast affiché uniquement dans l'écran
+  principal, pas pendant l'Onboarding (pas de barre de navigation à cet endroit).

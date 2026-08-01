@@ -789,6 +789,25 @@ nav.bottom-nav button[data-active="true"] svg {
 }
 nav.bottom-nav svg { width: 1.25rem; height: 1.25rem; }
 
+/* ── Avertissement de sortie (bouton retour Android) ── */
+.exit-warning-toast {
+  position: fixed;
+  bottom: calc(5.25rem + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 31;
+  padding: 0.6rem 1.1rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  animation: exit-toast-in 0.15s ease-out;
+}
+@keyframes exit-toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(0.4rem); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 /*
  * Entrée centrale "Recherche" (ex-Découvrir) : sort du gabarit icône+libellé des 4 autres
  * boutons pour un cercle plein en relief au-dessus de la barre, sans texte (retour
