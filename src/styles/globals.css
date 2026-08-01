@@ -756,6 +756,7 @@ nav.bottom-nav {
   max-width: 400px;
   border-radius: 9999px;
   display: flex;
+  align-items: flex-end;
   padding: 0.35rem;
   z-index: 30;
 }
@@ -788,6 +789,165 @@ nav.bottom-nav button[data-active="true"] svg {
   :root:not([data-theme]) nav.bottom-nav button[data-active="true"] svg { filter: none; }
 }
 nav.bottom-nav svg { width: 1.25rem; height: 1.25rem; }
+
+/*
+ * Entrée centrale "Recherche" (ex-Découvrir) : sort du gabarit icône+libellé des 4 autres
+ * boutons pour un cercle plein en relief au-dessus de la barre, sans texte (retour
+ * utilisateur : le libellé n'apporte rien ici, l'icône loupe se comprend seule).
+ */
+nav.bottom-nav .nav-fab-wrap { flex: 1; display: flex; justify-content: center; }
+nav.bottom-nav .nav-fab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: -1.7rem;
+  cursor: pointer;
+}
+nav.bottom-nav .nav-fab-circle {
+  width: 3.1rem;
+  height: 3.1rem;
+  border-radius: 9999px;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow:
+    0 6px 20px -4px color-mix(in srgb, var(--accent) 65%, transparent),
+    0 0 0 4px var(--bg-base);
+}
+nav.bottom-nav .nav-fab-circle svg { width: 1.4rem; height: 1.4rem; }
+nav.bottom-nav .nav-fab[data-active="true"] .nav-fab-circle {
+  box-shadow:
+    0 6px 26px -2px color-mix(in srgb, var(--accent) 85%, transparent),
+    0 0 0 4px var(--bg-base);
+}
+@media (prefers-reduced-motion: no-preference) {
+  nav.bottom-nav .nav-fab-circle { animation: neon-pulse 4.5s ease-in-out infinite; }
+}
+
+/* ── Dossiers : grille de collections, réordonnancement, chips ── */
+.folder-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; padding: 0 1rem 1rem; }
+.folder-card { margin: 0; padding: 0.8rem; border-radius: 1.1rem; cursor: pointer; }
+.folder-collage {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  aspect-ratio: 1 / 1;
+  border-radius: 0.7rem;
+  overflow: hidden;
+  margin-bottom: 0.65rem;
+}
+.folder-collage.single { grid-template-columns: 1fr; }
+.folder-collage .cover { border-radius: 0; }
+.folder-collage .swatch { width: 100%; height: 100%; }
+.folder-collage .swatch.empty {
+  background: var(--glass-bg);
+  display: grid;
+  place-items: center;
+  color: var(--faint);
+}
+.folder-collage .swatch.empty svg { width: 1.4rem; height: 1.4rem; }
+.folder-name { font-weight: 700; font-size: 0.92rem; margin: 0 0 0.15rem; }
+.folder-count { margin: 0; font-size: 0.75rem; color: var(--faint); }
+.add-folder-card {
+  border-radius: 1.1rem;
+  border: 1px dashed var(--glass-border);
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-height: 9.5rem;
+  cursor: pointer;
+}
+.add-folder-card svg { width: 1.4rem; height: 1.4rem; }
+
+.order-rank { width: 1.4rem; flex-shrink: 0; text-align: center; font-size: 0.78rem; font-weight: 700; color: var(--faint); }
+.order-btns { display: flex; flex-direction: column; gap: 0.15rem; flex-shrink: 0; }
+.order-btn {
+  width: 1.6rem;
+  height: 1.15rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+}
+.order-btn:disabled { opacity: 0.25; cursor: default; }
+.order-btn svg { width: 0.7rem; height: 0.7rem; }
+
+.row-action {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.row-action svg { width: 0.85rem; height: 0.85rem; }
+
+.row-checkbox {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  border: 1.5px solid var(--glass-border);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: transparent;
+}
+.row-checkbox[data-checked="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.row-checkbox svg { width: 0.9rem; height: 0.9rem; }
+
+/* Chips "Dossiers" (Fiche jeu) — dérivées de .chip mais avec une croix de retrait intégrée. */
+.folder-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem 0.4rem 0.8rem;
+  border-radius: 9999px;
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.folder-chip button {
+  border: none;
+  background: none;
+  color: var(--faint);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+}
+.folder-chip button svg { width: 0.85rem; height: 0.85rem; }
+.add-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 9999px;
+  border: 1px dashed var(--glass-border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
 
 /* ── Onboarding (première visite) ── */
 .onboarding { min-height: 100vh; display: flex; flex-direction: column; }

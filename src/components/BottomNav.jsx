@@ -1,16 +1,39 @@
-import { ControllerIcon, CalendarIcon, CompassIcon, UserIcon } from "./icons.jsx";
+import { ControllerIcon, CalendarIcon, CompassIcon, FolderIcon, UserIcon } from "./icons.jsx";
 
-const ITEMS = [
+const LEADING_ITEMS = [
   { key: "biblio", label: "Bibliothèque", Icon: ControllerIcon },
   { key: "avenir", label: "À venir", Icon: CalendarIcon },
-  { key: "decouvrir", label: "Découvrir", Icon: CompassIcon },
+];
+
+const TRAILING_ITEMS = [
+  { key: "dossiers", label: "Dossiers", Icon: FolderIcon },
   { key: "profil", label: "Profil", Icon: UserIcon },
 ];
 
 export default function BottomNav({ active, onSelect }) {
   return (
     <nav className="bottom-nav glass-strong">
-      {ITEMS.map(({ key, label, Icon }) => (
+      {LEADING_ITEMS.map(({ key, label, Icon }) => (
+        <button key={key} data-active={active === key} onClick={() => onSelect(key)}>
+          <Icon />
+          {label}
+        </button>
+      ))}
+
+      <div className="nav-fab-wrap">
+        <button
+          className="nav-fab"
+          data-active={active === "decouvrir"}
+          onClick={() => onSelect("decouvrir")}
+          aria-label="Recherche"
+        >
+          <span className="nav-fab-circle">
+            <CompassIcon />
+          </span>
+        </button>
+      </div>
+
+      {TRAILING_ITEMS.map(({ key, label, Icon }) => (
         <button key={key} data-active={active === key} onClick={() => onSelect(key)}>
           <Icon />
           {label}

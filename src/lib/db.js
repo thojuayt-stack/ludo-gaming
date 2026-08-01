@@ -6,6 +6,7 @@ import { createStore, get, set, del, values, clear } from "idb-keyval";
 const gameCacheStore = createStore("ludotheque-game-cache", "entries");
 const libraryStore = createStore("ludotheque-library", "entries");
 const wishlistStore = createStore("ludotheque-wishlist", "entries");
+const foldersStore = createStore("ludotheque-folders", "entries");
 
 export const gameCacheDb = {
   get: (igdbId) => get(igdbId, gameCacheStore),
@@ -24,4 +25,11 @@ export const libraryDb = {
 export const wishlistDb = {
   values: () => values(wishlistStore),
   clear: () => clear(wishlistStore),
+};
+
+export const foldersDb = {
+  get: (id) => get(id, foldersStore),
+  set: (id, value) => set(id, value, foldersStore),
+  del: (id) => del(id, foldersStore),
+  values: () => values(foldersStore),
 };

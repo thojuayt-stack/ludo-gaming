@@ -14,7 +14,8 @@ wishlist dans le modèle de bibliothèque unifié (recettes cochées : voir les 
 charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul concept,
 `LibraryEntry`, avec un champ `possede`.
 
-- **Découvrir** : recherche live sur IGDB (debounce 300 ms, spinner pendant le chargement),
+- **Recherche** (ex-Découvrir, bouton central de la nav basse depuis le chantier Dossiers) :
+  recherche live sur IGDB (debounce 300 ms, spinner pendant le chargement),
   résultats avec cover/plateformes. Chaque résultat est cliquable (ouvre sa Fiche jeu) et porte
   un bouton d'ajout (« Déjà suivi » si déjà présent). L'ajout ouvre toujours la même Sheet :
   toggle « Je possède ce jeu » (forcé à Non, désactivé, si la date de sortie est future et
@@ -58,6 +59,17 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   Ce mois-ci / Plus tard, calculée en jours glissants), countdown adapté (jours si ≤60j,
   mois/année au-delà, « Date TBD » sinon), indicateur de fraîcheur + bouton Actualiser, retrait
   avec confirmation (retire complètement l'entrée).
+- **Dossiers** : collections perso créées manuellement pour organiser la bibliothèque (aucun
+  classement automatique par plateforme/genre) — un jeu peut appartenir à plusieurs dossiers en
+  même temps. Écran liste (grille 2 colonnes, vignette en collage de jusqu'à 4 jaquettes — 1 seule
+  jaquette pleine largeur si un seul jeu, icône dossier générique si vide) et écran détail
+  (réordonnancement par flèches ↑/↓, numéro de rang affiché, retrait d'un jeu sans le retirer de
+  la Bibliothèque, suppression du dossier avec confirmation — ne supprime jamais les jeux qu'il
+  contenait). Ajout d'un jeu à un dossier possible depuis deux points d'entrée équivalents :
+  l'écran Dossiers (Sheet avec recherche locale et cases à cocher sur toute la bibliothèque) et la
+  Fiche jeu (bloc « Dossiers », chips + Sheet de sélection avec création de dossier à la volée).
+  Retirer un jeu de la Bibliothèque le retire automatiquement (silencieusement) de tous ses
+  dossiers.
 - **Fiche jeu** : mise en page côte à côte (inchangée depuis Livraison 5) — jaquette entière et
   nette à gauche (sans rognage, `object-fit: contain`), infos à droite : titre en gras, date de
   sortie en sous-titre, genres en tags ; plateformes du jeu en ligne icône + texte sous le hero.
@@ -70,7 +82,8 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   possédées, **présélectionnée automatiquement si une seule plateforme est possédée** au moment
   où le jeu passe à « Terminé », sans revenir si l'utilisateur la décoche ensuite) + compteur
   « Terminé ×N » + bouton **Recommencer** (si terminé), note/commentaire (si possédé, jamais
-  effacés si on décoche possession — juste masqués), retrait avec confirmation.
+  effacés si on décoche possession — juste masqués), retrait avec confirmation. Bloc « Dossiers »
+  (visible seulement si le jeu est dans la Bibliothèque) juste en dessous.
 - **Profil** : donut + 4 tuiles de statistiques calculées localement (jeux terminés, plateforme
   et genre les plus fréquents — la plateforme utilise en priorité celles cochées comme
   possédées, note moyenne — « — » si rien à calculer plutôt qu'un NaN), réglage d'apparence
@@ -619,3 +632,62 @@ l'utilisateur sur les deux boutons ronds séparés de l'en-tête Bibliothèque.
   `.view-toggle-item`, isolées (n'affectent rien d'existant).
 - Vérifié en conditions réelles : bascule liste ↔ grille fonctionne (pastille glisse), lisible
   en thème clair et sombre, aucune erreur console, `npm test` toujours à 65/65.
+
+### Livraison 22 — Chantier Dossiers + refonte de la nav basse (2026-08-01)
+- Maquette autonome cliquable
+  [mockups/navbar-recherche-dossiers.html](../mockups/navbar-recherche-dossiers.html) (dark +
+  light, nav bar + écran Dossiers liste/détail + les deux points d'entrée d'ajout) validée par
+  l'utilisateur avant le code, sur inspiration d'une capture d'app tierce (nav à bouton central en
+  relief). Cadrage produit acté avant la maquette : dossiers = collections perso manuelles (pas de
+  classement automatique), un jeu peut être dans plusieurs dossiers, ajout possible depuis l'écran
+  Dossiers **et** la Fiche jeu, réordonnancement demandé explicitement par l'utilisateur (ordre de
+  préférence / prochain jeu à jouer). Deux retouches actées après la première proposition : bouton
+  central de la nav en icône seule (sans libellé) et flèches de réordonnancement des jeux dans un
+  dossier. Cahier des charges :
+  [CAHIER-DES-CHARGES-dossiers.md](CAHIER-DES-CHARGES-dossiers.md).
+- **Modèle `Folder`** (nouvelle base IndexedDB `ludotheque-folders`, `src/lib/db.js`) :
+  `id, name, gameIds (ordonné), createdAt, updatedAt`. Logique pure dans
+  `src/lib/folders-pure.js` (`sortByCreatedAtAsc`, `moveGameInOrder`, `foldersContainingGame`,
+  `filterGamesByTitle` — 10 nouveaux tests, `npm test` → 75 tests), CRUD dans `src/lib/folders.js`
+  (`listFolders`, `createFolder`, `deleteFolder`, `addGameToFolder`, `removeGameFromFolder`,
+  `reorderGameInFolder`, `removeGameFromAllFolders`).
+- **Cascade** : `removeFromLibrary` (`src/lib/library.js`) appelle désormais
+  `removeGameFromAllFolders` — retirer un jeu de la Bibliothèque le retire silencieusement de tous
+  ses dossiers, sans jamais toucher aux autres jeux d'un dossier ni supprimer le dossier lui-même.
+- **Barre de navigation** (`src/components/BottomNav.jsx`) : 5 destinations dans l'ordre
+  Bibliothèque / À venir / Recherche / Dossiers / Profil. Recherche (ex-Découvrir, même écran,
+  même clé interne `decouvrir`) rendue en bouton central surélevé, icône seule sans libellé.
+  Nouvelle icône `FolderIcon` (+ `ChevronUpIcon`/`ChevronDownIcon` pour le réordonnancement) dans
+  `src/components/icons.jsx`.
+- **Nouvel écran** `src/screens/Dossiers.jsx` (liste + détail via un état interne
+  `selectedFolderId`, pas de nouvelle route dans `App.jsx` au-delà de l'entrée `dossiers` du
+  routeur d'écrans) : grille de cartes avec collage de jaquettes, Sheet « Nouveau dossier », Sheet
+  « Ajouter des jeux » (recherche locale sans réseau, cases à cocher sur toute la bibliothèque),
+  détail avec rang + flèches ↑/↓ (désactivées en tête/fin de liste) + retrait + suppression du
+  dossier (confirmation inline, même pattern que Fiche jeu/À venir).
+- `src/screens/FicheJeu.jsx` : nouveau bloc « Dossiers » (chips + croix de retrait), visible
+  uniquement si le jeu est dans la Bibliothèque, nouveau composant
+  `src/components/AjouterDossierSheet.jsx` (sélection multi-dossiers + création à la volée qui
+  ajoute directement le jeu au nouveau dossier).
+- `src/styles/globals.css` : classes dédiées `.folder-grid`/`.folder-card`/`.folder-collage`
+  (grille de dossiers), `.order-rank`/`.order-btns`/`.order-btn` (réordonnancement),
+  `.row-checkbox` (cases à cocher des Sheets), `.folder-chip`/`.add-chip` (Fiche jeu), `.nav-fab*`
+  (bouton central de la nav) — toutes isolées, aucune classe existante modifiée.
+- Vérifié en conditions réelles (`npm run dev`, données de test créées puis entièrement retirées
+  après vérification, aucune donnée réelle de l'utilisateur touchée — la bibliothèque réelle n'a
+  pas pu être exercée cette fois, `vercel dev` local bloqué par un souci d'environnement Twitch
+  hors sujet de ce chantier, voir note ci-dessous) : création d'un dossier, ajout de jeux depuis
+  l'écran Dossiers (Sheet, cases à cocher, pré-cochées si déjà dedans), ajout depuis la Fiche jeu
+  (chip + création à la volée d'un nouveau dossier), un même jeu dans 2 dossiers en parallèle,
+  réordonnancement par flèches (ordre persisté, flèches désactivées aux extrémités), retrait d'un
+  jeu d'un dossier, suppression d'un dossier avec confirmation, retrait de bibliothèque → cascade
+  vérifiée (le jeu disparaît automatiquement de son dossier), collage de jaquettes à 0/1/2 jeux,
+  thème clair et sombre, aucune erreur console, `npm test` → 75/75.
+- **Non vérifié avec de vraies données IGDB** : `vercel dev --listen 3000` a échoué en local
+  pendant cette session (« TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET manquants côté serveur » malgré
+  leur présence dans `.env.local`) — souci d'environnement local à creuser séparément, sans lien
+  avec le code de ce chantier ; la recette a été faite avec des jeux de test injectés directement
+  dans IndexedDB (mêmes chemins de code que des données réelles : `LibraryEntry` + `GameCache`).
+- **Prochaine étape demandée par l'utilisateur** : permettre de réordonner manuellement les jeux
+  au sein du filtre **En cours** de la Bibliothèque (même besoin que l'ordre des dossiers — savoir
+  dans quel ordre continuer ses jeux en cours), pas encore cadrée ni codée.

@@ -3,6 +3,7 @@ import BottomNav from "./components/BottomNav.jsx";
 import Bibliotheque from "./screens/Bibliotheque.jsx";
 import Decouvrir from "./screens/Decouvrir.jsx";
 import Avenir from "./screens/Avenir.jsx";
+import Dossiers from "./screens/Dossiers.jsx";
 import Profil from "./screens/Profil.jsx";
 import FicheJeu from "./screens/FicheJeu.jsx";
 import Onboarding from "./screens/Onboarding.jsx";
@@ -12,6 +13,7 @@ const SCREENS = {
   biblio: Bibliotheque,
   avenir: Avenir,
   decouvrir: Decouvrir,
+  dossiers: Dossiers,
   profil: Profil,
 };
 

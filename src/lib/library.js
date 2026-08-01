@@ -6,6 +6,7 @@ import {
   nextPlayCount,
   autoFinishedPlatform,
 } from "./library-pure.js";
+import { removeGameFromAllFolders } from "./folders.js";
 
 export {
   STATUSES,
@@ -77,6 +78,7 @@ export async function updateLibraryEntry(igdbId, patch) {
 
 export async function removeFromLibrary(igdbId) {
   await libraryDb.del(igdbId);
+  await removeGameFromAllFolders(igdbId);
 }
 
 export async function listLibraryEntries({ status, possede } = {}) {

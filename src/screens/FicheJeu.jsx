@@ -3,12 +3,14 @@ import { getGame } from "../lib/igdb.js";
 import { getLibraryEntry, updateLibraryEntry, removeFromLibrary } from "../lib/library.js";
 import { STATUSES, STATUS_LABELS, completionLabel, isOwnershipLocked } from "../lib/library-pure.js";
 import { daysUntil, isUnreleased } from "../lib/wishlist-pure.js";
+import { listFolders, foldersContainingGame, removeGameFromFolder } from "../lib/folders.js";
 import Cover from "../components/Cover.jsx";
 import Countdown from "../components/Countdown.jsx";
 import AjouterSheet from "../components/AjouterSheet.jsx";
+import AjouterDossierSheet from "../components/AjouterDossierSheet.jsx";
 import StatusFilterBar, { STATUS_ICONS } from "../components/StatusFilterBar.jsx";
 import Toggle from "../components/Toggle.jsx";
-import { ControllerIcon } from "../components/icons.jsx";
+import { ControllerIcon, XIcon } from "../components/icons.jsx";
 
 const SUMMARY_COLLAPSE_THRESHOLD = 220;
 
@@ -21,13 +23,16 @@ export default function FicheJeu({ igdbId, onBack }) {
   const [expanded, setExpanded] = useState(false);
   const [loadError, setLoadError] = useState(null);
   const [showAddSheet, setShowAddSheet] = useState(false);
+  const [folders, setFolders] = useState([]);
+  const [showAddToFolderSheet, setShowAddToFolderSheet] = useState(false);
 
   const reload = useCallback(async () => {
     setLoadError(null);
     try {
-      const [g, e] = await Promise.all([getGame(igdbId), getLibraryEntry(igdbId)]);
+      const [g, e, f] = await Promise.all([getGame(igdbId), getLibraryEntry(igdbId), listFolders()]);
       setGame(g);
       setEntry(e);
+      setFolders(f);
       setRatingInput(e?.rating ?? "");
       setCommentInput(e?.comment ?? "");
     } catch (err) {
@@ -86,6 +91,18 @@ export default function FicheJeu({ igdbId, onBack }) {
     onBack();
   }
 
+  function handleFolderChange(updatedFolder) {
+    setFolders((prev) => {
+      const exists = prev.some((f) => f.id === updatedFolder.id);
+      return exists ? prev.map((f) => (f.id === updatedFolder.id ? updatedFolder : f)) : [...prev, updatedFolder];
+    });
+  }
+
+  async function handleRemoveFromFolder(folderId) {
+    const updated = await removeGameFromFolder(folderId, igdbId);
+    handleFolderChange(updated);
+  }
+
   if (loadError) {
     return (
       <div className="px-4 pt-6">
@@ -110,6 +127,7 @@ export default function FicheJeu({ igdbId, onBack }) {
   const showToggle = game.summary && game.summary.length > SUMMARY_COLLAPSE_THRESHOLD;
   const locked = isOwnershipLocked(game.releaseDate);
   const finishedPlatformOptions = entry?.platforms?.length ? entry.platforms : game.platforms;
+  const gameFolders = entry ? foldersContainingGame(folders, igdbId) : [];
 
   return (
     <div className="pb-6">
@@ -263,6 +281,27 @@ export default function FicheJeu({ igdbId, onBack }) {
             )}
           </div>
 
+          <div className="glass mx-4 mt-4 flex flex-col gap-3 rounded-3xl p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-faint">Dossiers</p>
+            <div className="flex flex-wrap gap-2">
+              {gameFolders.map((folder) => (
+                <span key={folder.id} className="folder-chip">
+                  {folder.name}
+                  <button
+                    type="button"
+                    aria-label={`Retirer de ${folder.name}`}
+                    onClick={() => handleRemoveFromFolder(folder.id)}
+                  >
+                    <XIcon />
+                  </button>
+                </span>
+              ))}
+              <button type="button" className="add-chip" onClick={() => setShowAddToFolderSheet(true)}>
+                <span aria-hidden="true">+</span> Ajouter à un dossier
+              </button>
+            </div>
+          </div>
+
           <div className="px-4 pt-5">
             {confirmingRemove ? (
               <div className="flex items-center justify-between gap-3 text-sm">
@@ -302,6 +341,15 @@ export default function FicheJeu({ igdbId, onBack }) {
             setCommentInput(newEntry.comment ?? "");
             setShowAddSheet(false);
           }}
+        />
+      )}
+
+      {showAddToFolderSheet && entry && (
+        <AjouterDossierSheet
+          game={game}
+          folders={folders}
+          onClose={() => setShowAddToFolderSheet(false)}
+          onChange={handleFolderChange}
         />
       )}
     </div>
