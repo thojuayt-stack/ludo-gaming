@@ -27,10 +27,6 @@ export default function Onboarding({ onDone, onOpenGame }) {
 
   return (
     <div className="onboarding">
-      <div className="flex justify-end px-4 pt-4">
-        <button className="btn-glass" onClick={onDone}>Passer</button>
-      </div>
-
       <div className="onboarding-hero">
         <div className="badge">🎮</div>
         <h1>Bienvenue dans Ludothèque</h1>
@@ -61,8 +57,9 @@ export default function Onboarding({ onDone, onOpenGame }) {
         </div>
       )}
 
-      <div className="onboarding-footer">
-        <button className="btn-primary w-full" onClick={onDone}>Aller à ma bibliothèque</button>
+      <div className="onboarding-footer flex gap-3">
+        <button className="btn-glass flex-1" onClick={onDone}>Passer</button>
+        <button className="btn-primary flex-1" onClick={onDone}>Aller à ma bibliothèque</button>
       </div>
     </div>
   );
