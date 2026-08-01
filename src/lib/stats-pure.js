@@ -1,10 +1,10 @@
 // Logique pure des statistiques du Profil : aucun accès à IndexedDB ni au DOM
 // ici (voir stats-pure.test.js).
 
-export const STATUS_ORDER = ["termine", "en_cours", "backlog", "abandonne"];
+export const STATUS_ORDER = ["termine", "en_cours", "backlog"];
 
 export function countByStatus(entries) {
-  const counts = { termine: 0, en_cours: 0, backlog: 0, abandonne: 0 };
+  const counts = { termine: 0, en_cours: 0, backlog: 0 };
   for (const entry of entries) {
     if (counts[entry.status] != null) counts[entry.status] += 1;
   }

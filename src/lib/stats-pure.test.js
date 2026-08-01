@@ -17,11 +17,11 @@ test("countByStatus compte chaque statut, ignore les valeurs inconnues", () => {
     { status: "backlog" },
     { status: "quelquechose_dinconnu" },
   ];
-  assert.deepEqual(countByStatus(entries), { termine: 2, en_cours: 1, backlog: 1, abandonne: 0 });
+  assert.deepEqual(countByStatus(entries), { termine: 2, en_cours: 1, backlog: 1 });
 });
 
 test("countByStatus sur une liste vide renvoie tout à zéro", () => {
-  assert.deepEqual(countByStatus([]), { termine: 0, en_cours: 0, backlog: 0, abandonne: 0 });
+  assert.deepEqual(countByStatus([]), { termine: 0, en_cours: 0, backlog: 0 });
 });
 
 test("averageRating renvoie null sans jeu noté", () => {
@@ -65,17 +65,17 @@ test("topNFrequent trie par fréquence décroissante puis alphabétique, limité
 });
 
 test("donutSegments renvoie un tableau vide si tout est à zéro", () => {
-  assert.deepEqual(donutSegments({ termine: 0, en_cours: 0, backlog: 0, abandonne: 0 }), []);
+  assert.deepEqual(donutSegments({ termine: 0, en_cours: 0, backlog: 0 }), []);
 });
 
 test("donutSegments répartit proportionnellement et couvre toute la circonférence", () => {
-  const segments = donutSegments({ termine: 3, en_cours: 1, backlog: 0, abandonne: 0 });
+  const segments = donutSegments({ termine: 3, en_cours: 1, backlog: 0 });
   assert.equal(segments.length, 2);
   const totalLength = segments.reduce((sum, s) => sum + parseFloat(s.dasharray.split(" ")[0]), 0);
   assert.ok(Math.abs(totalLength - DONUT_CIRCUMFERENCE) < 0.01);
 });
 
 test("donutSegments : le premier segment démarre à l'offset 0", () => {
-  const segments = donutSegments({ termine: 1, en_cours: 1, backlog: 0, abandonne: 0 });
+  const segments = donutSegments({ termine: 1, en_cours: 1, backlog: 0 });
   assert.equal(segments[0].dashoffset, "0.00");
 });

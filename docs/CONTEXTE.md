@@ -39,7 +39,7 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   catalogue IGDB seulement si aucune n'est cochée), bascule vers la vue Liste
   disponible (inchangée, compacte) via un contrôle **unique** à pastille glissante
   (`ViewToggle`, remplace les deux boutons ronds séparés d'avant), filtre par statut
-  (Tous/**À faire**/En cours/Terminé/Abandonné — « À faire » est le libellé affiché, la clé
+  (Tous/**À faire**/En cours/Terminé — « À faire » est le libellé affiché, la clé
   interne reste `backlog`) avec une icône par statut ; seul l'actif affiche son libellé (fondu
   croisé au changement), les autres n'ont que leur icône (légèrement agrandie), dans un
   sélecteur qui glisse (CSS pur, translateX en %) au lieu de changer instantanément. L'icône
@@ -691,3 +691,35 @@ l'utilisateur sur les deux boutons ronds séparés de l'en-tête Bibliothèque.
 - **Prochaine étape demandée par l'utilisateur** : permettre de réordonner manuellement les jeux
   au sein du filtre **En cours** de la Bibliothèque (même besoin que l'ordre des dossiers — savoir
   dans quel ordre continuer ses jeux en cours), pas encore cadrée ni codée.
+
+### Livraison 23 — Retrait du statut "Abandonné" (2026-08-01)
+Retouche demandée directement par l'utilisateur (« je pars en balade, je ne pourrai pas valider »,
+consigne explicite de committer/pousser/déployer directement sans étape de validation
+intermédiaire) — pas de nouveau cahier des charges, retrait pur d'un statut existant.
+- `src/lib/library-pure.js` : `STATUSES` passe de 4 à 3 valeurs (`backlog`, `en_cours`,
+  `termine`), `abandonne` retiré de `STATUS_LABELS`. `src/lib/stats-pure.js` :
+  `STATUS_ORDER`/`countByStatus` idem (3 clés). Tout le reste de l'app (filtre de statut
+  Bibliothèque et Fiche jeu, segment de la Sheet d'ajout, donut + légende du Profil) est
+  entièrement piloté par ces deux exports — aucun autre changement de logique nécessaire, la
+  4ᵉ colonne/segment/tranche de donut disparaît d'elle-même.
+- `src/components/StatusFilterBar.jsx` (`STATUS_ICONS`), `src/components/Donut.jsx`
+  (`STATUS_COLOR_VARS`) : entrée `abandonne` retirée. `src/styles/globals.css` :
+  `.pill-abandonne` supprimée.
+- **Migration** `migrateAbandonneStatus` (`src/lib/library.js`, branchée dans `src/main.jsx`,
+  même pattern idempotent que les 3 migrations précédentes) : tout `LibraryEntry` encore au
+  statut `abandonne` repasse en `backlog` (« À faire ») — jamais de suppression silencieuse d'une
+  entrée de bibliothèque, seul le statut change.
+- `src/lib/stats-pure.test.js` : fixtures mises à jour (retrait de la clé `abandonne`),
+  `npm test` → 75 tests toujours verts (aucun test perdu, juste des assertions resserrées).
+  `npm run build` propre.
+- `CLAUDE.md` (section « Statuts d'un jeu ») mis à jour pour ne plus lister ce statut.
+- Vérifié en conditions réelles (`npm run dev`, IndexedDB vide) : un jeu de test injecté
+  directement en IndexedDB avec `status: "abandonne"` (pour simuler une donnée réelle
+  pré-existante) repasse bien en « À faire » après rechargement (migration exécutée une seule
+  fois, flag `localStorage`) ; filtre de statut de la Bibliothèque à 4 boutons au lieu de 5
+  (Tous/À faire/En cours/Terminé) ; sélecteur de la Fiche jeu à 3 statuts ; donut + légende du
+  Profil sans trace du statut ; aucune erreur console. Données de test retirées après
+  vérification.
+- Poussé sur `origin/main` et déployé en production
+  ([ludotheque-five.vercel.app](https://ludotheque-five.vercel.app)) directement après
+  vérification, conformément à la consigne explicite de l'utilisateur.

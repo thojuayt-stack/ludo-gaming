@@ -93,6 +93,7 @@ export async function listLibraryEntries({ status, possede } = {}) {
 const WISHLIST_MIGRATION_FLAG = "wishlist_migrated_v1";
 const SCHEMA_MIGRATION_FLAG = "library_schema_v2";
 const FINISHED_PLATFORM_ARRAY_FLAG = "finished_platform_array_v1";
+const ABANDONNE_MIGRATION_FLAG = "abandonne_removed_v1";
 
 /**
  * Migration unique (chantier 4) : les anciennes WishlistEntry deviennent des
@@ -195,6 +196,35 @@ export async function migrateFinishedPlatformToArray() {
 
   try {
     localStorage.setItem(FINISHED_PLATFORM_ARRAY_FLAG, "1");
+  } catch {
+    // best effort
+  }
+}
+
+/**
+ * Migration unique : le statut "abandonné" est retiré de l'app (retour utilisateur explicite,
+ * il ne doit plus apparaître nulle part). Les jeux déjà marqués "abandonne" repassent en "À
+ * faire" (`backlog`) plutôt que d'être supprimés — on ne perd jamais une entrée de bibliothèque
+ * silencieusement, seul le statut change. Idempotente.
+ */
+export async function migrateAbandonneStatus() {
+  try {
+    if (typeof localStorage !== "undefined" && localStorage.getItem(ABANDONNE_MIGRATION_FLAG)) {
+      return;
+    }
+  } catch {
+    // pas de localStorage : on retentera au prochain démarrage, sans risque (idempotent)
+  }
+
+  const all = await libraryDb.values();
+  for (const entry of all) {
+    if (entry.status === "abandonne") {
+      await libraryDb.set(entry.igdbId, { ...entry, status: "backlog" });
+    }
+  }
+
+  try {
+    localStorage.setItem(ABANDONNE_MIGRATION_FLAG, "1");
   } catch {
     // best effort
   }

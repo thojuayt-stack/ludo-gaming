@@ -1,12 +1,11 @@
 import { useLayoutEffect, useRef } from "react";
-import { CircleIcon, PlayCircleIcon, CheckIcon, XIcon } from "./icons.jsx";
+import { CircleIcon, PlayCircleIcon, CheckIcon } from "./icons.jsx";
 
-// Icônes des 4 statuts d'un jeu, partagées entre la Bibliothèque (+ "tous") et la Fiche jeu.
+// Icônes des 3 statuts d'un jeu, partagées entre la Bibliothèque (+ "tous") et la Fiche jeu.
 export const STATUS_ICONS = {
   backlog: CircleIcon,
   en_cours: PlayCircleIcon,
   termine: CheckIcon,
-  abandonne: XIcon,
 };
 
 /**

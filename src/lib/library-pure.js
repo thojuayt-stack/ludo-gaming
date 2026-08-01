@@ -3,13 +3,12 @@
 
 import { isUnreleased, byReleaseDateAscThenTitle } from "./wishlist-pure.js";
 
-export const STATUSES = ["backlog", "en_cours", "termine", "abandonne"];
+export const STATUSES = ["backlog", "en_cours", "termine"];
 
 export const STATUS_LABELS = {
   backlog: "À faire",
   en_cours: "En cours",
   termine: "Terminé",
-  abandonne: "Abandonné",
 };
 
 /** Note interne sur 10 -> valeur sur 5 arrondie au demi-point (pour l'affichage en étoiles). */

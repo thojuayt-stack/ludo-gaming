@@ -4,7 +4,6 @@ export const STATUS_COLOR_VARS = {
   termine: "var(--positive)",
   en_cours: "var(--status-progress)",
   backlog: "var(--status-backlog)",
-  abandonne: "var(--negative)",
 };
 
 export default function Donut({ counts, total, centerLabel }) {

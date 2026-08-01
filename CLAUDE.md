@@ -18,7 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Le projet
 
 App de suivi de jeux vidéo : bibliothèque personnelle (jeux joués, en cours, terminés,
-abandonnés, notés/commentés) + wishlist des sorties à venir, toutes plateformes confondues,
+notés/commentés) + wishlist des sorties à venir, toutes plateformes confondues,
 tenue à jour via un catalogue externe (IGDB).
 
 **MVP volontairement sans social ni compte** : tout est local sur l'appareil, l'aspect social
@@ -38,8 +38,8 @@ tenue à jour via un catalogue externe (IGDB).
   serveur pour le MVP).
 
 ### Statuts d'un jeu dans la bibliothèque
-`backlog` / `en cours` / `terminé` / `abandonné` — équivalent jeu vidéo des statuts
-« à voir / vu / archivé » d'un tracker séries.
+`backlog` / `en cours` / `terminé` — équivalent jeu vidéo des statuts « à voir / vu » d'un
+tracker séries. Pas de statut « abandonné » (retiré de l'app, retour utilisateur explicite).
 
 ## Commandes
 
