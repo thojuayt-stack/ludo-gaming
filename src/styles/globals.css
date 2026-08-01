@@ -548,6 +548,48 @@ button.chip[data-active="true"] {
 }
 .icon-btn[data-active="true"] { color: var(--foreground); background: var(--glass-bg-strong); }
 
+/* Bascule liste/grille à pastille glissante (remplace 2 `.icon-btn` séparés) — même
+   principe que `.status-filter` : indicateur en `translateX(N * 100%)`, largeur en %
+   pour rester correct quelle que soit la taille réelle du contrôle. */
+.view-toggle {
+  position: relative;
+  display: inline-flex;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 9999px;
+  padding: 0.2rem;
+}
+.view-toggle-indicator {
+  position: absolute;
+  top: 0.2rem;
+  left: 0.2rem;
+  width: calc(50% - 0.2rem);
+  height: calc(100% - 0.4rem);
+  border-radius: 9999px;
+  background: var(--accent);
+  box-shadow: 0 0 14px -2px color-mix(in srgb, var(--accent) 80%, transparent);
+  z-index: 1;
+  transition: transform 0.3s cubic-bezier(0.65, 0, 0.35, 1);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .view-toggle-indicator { animation: neon-pulse 4.5s ease-in-out infinite; }
+}
+.view-toggle-item {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border: none;
+  background: transparent;
+  border-radius: 9999px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.view-toggle-item[data-active="true"] { color: var(--accent-ink); }
+.view-toggle-item svg { width: 1.05rem; height: 1.05rem; }
+
 .add-btn {
   display: grid;
   place-items: center;

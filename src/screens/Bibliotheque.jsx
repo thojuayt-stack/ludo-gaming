@@ -9,7 +9,8 @@ import StatusPill from "../components/StatusPill.jsx";
 import Stars from "../components/Stars.jsx";
 import Countdown from "../components/Countdown.jsx";
 import StatusFilterBar, { STATUS_ICONS } from "../components/StatusFilterBar.jsx";
-import { ListIcon, GridIcon } from "../components/icons.jsx";
+import ViewToggle from "../components/ViewToggle.jsx";
+import { GridIcon } from "../components/icons.jsx";
 
 const FILTERS = ["tous", ...STATUSES];
 const FILTER_LABELS = { tous: "Tous", ...STATUS_LABELS };
@@ -158,16 +159,7 @@ export default function Bibliotheque({ onOpenGame, onNavigate }) {
       <PageHeader
         title="Bibliothèque"
         subtitle={count == null ? "…" : `${count} jeu${count > 1 ? "x" : ""}`}
-        action={
-          <div className="flex gap-1.5">
-            <button className="icon-btn" data-active={view === "liste"} onClick={() => setView("liste")} aria-label="Vue liste">
-              <ListIcon />
-            </button>
-            <button className="icon-btn" data-active={view === "grille"} onClick={() => setView("grille")} aria-label="Vue grille">
-              <GridIcon />
-            </button>
-          </div>
-        }
+        action={<ViewToggle value={view} onChange={setView} />}
       />
 
       <div className="mb-3 px-4">

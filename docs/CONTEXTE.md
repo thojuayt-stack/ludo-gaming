@@ -35,8 +35,9 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   entrer dans l'app normale.
 - **Bibliothèque** : vue Grille par défaut, **2 colonnes** (jaquettes larges, style inspiré de
   l'app PlayStation — titre en gras et **plateforme possédée** sous chaque tuile, celle du
-  catalogue IGDB seulement si aucune n'est cochée), bascule Liste
-  disponible (inchangée, compacte), filtre par statut
+  catalogue IGDB seulement si aucune n'est cochée), bascule vers la vue Liste
+  disponible (inchangée, compacte) via un contrôle **unique** à pastille glissante
+  (`ViewToggle`, remplace les deux boutons ronds séparés d'avant), filtre par statut
   (Tous/**À faire**/En cours/Terminé/Abandonné — « À faire » est le libellé affiché, la clé
   interne reste `backlog`) avec une icône par statut ; seul l'actif affiche son libellé (fondu
   croisé au changement), les autres n'ont que leur icône (légèrement agrandie), dans un
@@ -603,3 +604,18 @@ déjà validées), suite à trois retours utilisateur sur une même capture anno
   `vercel dev` non démarré pour cette vérification) ; classes CSS confirmées par lecture du code
   et par le composant équivalent dans la maquette validée.
 - `npm test` → 65 tests, tous verts (aucune logique pure modifiée).
+
+### Livraison 21 — Bibliothèque : bascule liste/grille unifiée (2026-08-01)
+Retouche sans nouveau cahier des charges (réutilise le principe déjà en place de
+`StatusFilterBar` — indicateur qui glisse en `translateX`), demandée après retour visuel de
+l'utilisateur sur les deux boutons ronds séparés de l'en-tête Bibliothèque.
+- Nouveau composant `src/components/ViewToggle.jsx` : un seul contrôle pilule à 2 icônes
+  (liste à gauche, grille à droite), pastille d'accent qui glisse derrière l'icône active,
+  même style néon que le reste du chantier précédent (halo + pulsation douce).
+- `src/screens/Bibliotheque.jsx` : les deux `<button className="icon-btn">` remplacés par
+  `<ViewToggle value={view} onChange={setView} />` dans l'action du `PageHeader`. `.icon-btn`
+  reste inchangée (encore utilisée par `Avenir.jsx`).
+- `src/styles/globals.css` : nouvelles classes `.view-toggle`/`.view-toggle-indicator`/
+  `.view-toggle-item`, isolées (n'affectent rien d'existant).
+- Vérifié en conditions réelles : bascule liste ↔ grille fonctionne (pastille glisse), lisible
+  en thème clair et sombre, aucune erreur console, `npm test` toujours à 65/65.
