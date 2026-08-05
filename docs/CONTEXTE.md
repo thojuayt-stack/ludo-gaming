@@ -913,3 +913,15 @@ même sélecteur, juste une condition d'affichage en moins) suite à un retour u
   Extraction de code strictement analogue à celle déjà vérifiée en direct dans la Fiche jeu (même
   composant, même retrait de la condition `possede`) ; à confirmer par l'utilisateur au prochain
   ajout d'un jeu non possédé depuis Découvrir.
+
+### Livraison 30 — Sélecteur de note : retrait de la mention texte "X / 10" (2026-08-05)
+Retouche sans nouveau cahier des charges (ajustement mineur du composant, suite à un retour
+utilisateur sur une capture de la Fiche jeu en production) :
+- **Retour utilisateur** : la ligne "3 / 10" sous les pastilles est redondante avec la pastille
+  déjà mise en évidence (rose, en surbrillance) — à retirer.
+- `src/components/RatingSelector.jsx` : `<span className="rating-value">` (et son wrapper
+  `flex-col` devenu inutile, le composant ne rend plus que la grille) supprimés. Classe CSS
+  `.rating-value` (et `.rating-value strong`) retirée de `globals.css`.
+- Vérifié en conditions réelles (`npm run dev`, donnée de test créée puis retirée) : note posée
+  sur un jeu non possédé → seule la pastille colorée indique la note choisie, plus aucun texte
+  "X / 10" ni "Pas encore noté" affiché. `npm test` → 79/79, `npm run build` propre.

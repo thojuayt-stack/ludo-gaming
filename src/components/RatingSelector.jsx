@@ -5,26 +5,21 @@ const SCALE = Array.from({ length: 10 }, (_, i) => i + 1);
  * note déjà active l'efface (pas de bouton "Effacer" séparé). */
 export default function RatingSelector({ value = null, onChange }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="rating-grid">
-        {SCALE.map((n) => (
-          <button
-            type="button"
-            key={n}
-            className="rating-btn"
-            data-active={value === n}
-            data-covered={value != null && n <= value}
-            onClick={() => onChange(value === n ? null : n)}
-            aria-label={`Note ${n} sur 10`}
-            aria-pressed={value === n}
-          >
-            {n}
-          </button>
-        ))}
-      </div>
-      <span className="rating-value">
-        {value != null ? <><strong>{value}</strong> / 10</> : "Pas encore noté"}
-      </span>
+    <div className="rating-grid">
+      {SCALE.map((n) => (
+        <button
+          type="button"
+          key={n}
+          className="rating-btn"
+          data-active={value === n}
+          data-covered={value != null && n <= value}
+          onClick={() => onChange(value === n ? null : n)}
+          aria-label={`Note ${n} sur 10`}
+          aria-pressed={value === n}
+        >
+          {n}
+        </button>
+      ))}
     </div>
   );
 }

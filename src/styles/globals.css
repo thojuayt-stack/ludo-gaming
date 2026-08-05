@@ -475,8 +475,6 @@ button.chip[data-active="true"] {
   border-color: color-mix(in srgb, var(--accent) 45%, var(--glass-border));
   color: var(--foreground);
 }
-.rating-value { font-size: 0.78rem; font-weight: 700; color: var(--muted); min-height: 1.1em; }
-.rating-value strong { color: var(--accent); font-size: 0.95rem; }
 
 /*
  * Interrupteur à bascule (Fiche jeu, "Je possède ce jeu") — un seul bouton avec une pastille qui
