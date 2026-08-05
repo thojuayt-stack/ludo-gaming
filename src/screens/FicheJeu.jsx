@@ -252,24 +252,22 @@ export default function FicheJeu({ igdbId, onBack }) {
               </>
             )}
 
-            {entry.possede && (
-              <>
-                <div className="flex flex-col gap-1 text-sm">
-                  <span className="text-muted">Note</span>
-                  <RatingSelector value={entry.rating ?? null} onChange={commitRating} />
-                </div>
+            <div className="flex flex-col gap-1 text-sm">
+              <span className="text-muted">Note</span>
+              <RatingSelector value={entry.rating ?? null} onChange={commitRating} />
+            </div>
 
-                <label className="flex flex-col gap-1 text-sm">
-                  <span className="text-muted">Commentaire</span>
-                  <textarea
-                    className="field"
-                    rows={3}
-                    value={commentInput}
-                    onChange={(e) => setCommentInput(e.target.value)}
-                    onBlur={(e) => commitComment(e.target.value)}
-                  />
-                </label>
-              </>
+            {entry.possede && (
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-muted">Commentaire</span>
+                <textarea
+                  className="field"
+                  rows={3}
+                  value={commentInput}
+                  onChange={(e) => setCommentInput(e.target.value)}
+                  onBlur={(e) => commitComment(e.target.value)}
+                />
+              </label>
             )}
           </div>
 

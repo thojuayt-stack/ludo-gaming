@@ -43,7 +43,7 @@ export async function addToLibrary({
     platforms,
     finishedPlatform: autoFinishedPlatform(null, resolvedStatus, [], platforms),
     playCount: resolvedStatus === "termine" ? 1 : 0,
-    rating: possede ? rating : null,
+    rating,
     comment: possede ? comment : "",
     addedAt: now,
     updatedAt: now,

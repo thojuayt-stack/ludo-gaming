@@ -85,10 +85,11 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   possédées, **présélectionnée automatiquement si une seule plateforme est possédée** au moment
   où le jeu passe à « Terminé », sans revenir si l'utilisateur la décoche ensuite) + compteur
   « Terminé ×N » + bouton **Recommencer** (si terminé), note **sur 10 via un sélecteur de 10
-  pastilles cliquables** (composant `RatingSelector` partagé avec la Sheet d'ajout ; recliquer sur
-  la note déjà active l'efface, pas de bouton "Effacer" séparé) + commentaire (si possédé, quel
-  que soit le statut — à faire/en cours/terminé —, jamais effacés si on décoche possession — juste
-  masqués), retrait avec confirmation. Bloc « Dossiers » (visible seulement si le jeu est dans la
+  pastilles cliquables, disponible que le jeu soit possédé ou non** (composant `RatingSelector`
+  partagé avec la Sheet d'ajout ; recliquer sur la note déjà active l'efface, pas de bouton
+  "Effacer" séparé) + commentaire (seulement si possédé, quel que soit le statut — à
+  faire/en cours/terminé —, jamais effacés si on décoche possession — juste masqués), retrait avec
+  confirmation. Bloc « Dossiers » (visible seulement si le jeu est dans la
   Bibliothèque)
   juste en dessous.
 - **Profil** : donut + 4 tuiles de statistiques calculées localement (jeux terminés, plateforme
@@ -891,3 +892,24 @@ suite à un retour utilisateur sur une capture de la Sheet d'ajout en production
   pré-remplie à 5, clic sur la pastille "5" (déjà active) → repasse à "Pas encore noté", plus de
   bouton "Effacer" affiché. `npm test` → 79/79, `npm run build` propre.
 - Déployé en production (`vercel --prod`) après commit + push.
+
+### Livraison 29 — Note disponible même sur un jeu non possédé (2026-08-05)
+Retouche sans nouveau cahier des charges (extension du composant livré à la Livraison 27/28,
+même sélecteur, juste une condition d'affichage en moins) suite à un retour utilisateur :
+- **Retour utilisateur** : la note doit être disponible aussi pour les jeux **non possédés**
+  (wishlist / pas encore achetés), pas seulement pour ceux marqués « Je possède ce jeu ».
+- `src/screens/FicheJeu.jsx` et `src/components/AjouterSheet.jsx` : le bloc `RatingSelector` sort
+  de la condition `entry.possede`/`possede` (qui continue de conditionner statut, plateforme(s) de
+  complétion et **commentaire**, inchangés). `src/lib/library.js` (`addToLibrary`) : `rating:
+  possede ? rating : null` devient `rating` (n'était plus cohérent avec le nouvel affichage —
+  sans ce correctif, une note posée sur un jeu non possédé à l'ajout aurait été silencieusement
+  effacée à l'enregistrement).
+- Vérifié en conditions réelles (`npm run dev`, données de test créées puis retirées) : Fiche jeu
+  d'un jeu suivi avec « Je possède ce jeu » = Non → sélecteur de note affiché et fonctionnel (note
+  3 posée, persistée). `npm test` → 79/79, `npm run build` propre.
+- **Non vérifié en conditions réelles** : le sélecteur dans `AjouterSheet.jsx` avec le toggle
+  « Je possède ce jeu » décoché — nécessite d'atteindre la Sheet d'ajout pour un jeu pas encore
+  suivi, impossible à reproduire sans le proxy IGDB (`vercel dev`) dans cet environnement de test.
+  Extraction de code strictement analogue à celle déjà vérifiée en direct dans la Fiche jeu (même
+  composant, même retrait de la condition `possede`) ; à confirmer par l'utilisateur au prochain
+  ajout d'un jeu non possédé depuis Découvrir.

@@ -83,23 +83,21 @@ export default function AjouterSheet({ game, onClose, onAdded }) {
           </div>
         )}
 
-        {possede && (
-          <>
-            <div className="flex flex-col gap-1 text-sm">
-              <span className="text-muted">Note (optionnelle)</span>
-              <RatingSelector value={rating} onChange={setRating} />
-            </div>
+        <div className="flex flex-col gap-1 text-sm">
+          <span className="text-muted">Note (optionnelle)</span>
+          <RatingSelector value={rating} onChange={setRating} />
+        </div>
 
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted">Commentaire (optionnel)</span>
-              <textarea
-                className="field"
-                rows={3}
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-              />
-            </label>
-          </>
+        {possede && (
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-muted">Commentaire (optionnel)</span>
+            <textarea
+              className="field"
+              rows={3}
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+            />
+          </label>
         )}
 
         <div className="flex gap-3">
