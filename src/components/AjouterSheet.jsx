@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Sheet from "./Sheet.jsx";
 import Toggle from "./Toggle.jsx";
+import RatingSelector from "./RatingSelector.jsx";
 import { STATUSES, STATUS_LABELS, isOwnershipLocked } from "../lib/library-pure.js";
 import { addToLibrary } from "../lib/library.js";
 
@@ -11,7 +12,7 @@ export default function AjouterSheet({ game, onClose, onAdded }) {
   const [possede, setPossede] = useState(!locked && alreadyOut);
   const [status, setStatus] = useState("backlog");
   const [platforms, setPlatforms] = useState([]);
-  const [rating, setRating] = useState("");
+  const [rating, setRating] = useState(null);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -27,7 +28,7 @@ export default function AjouterSheet({ game, onClose, onAdded }) {
       status,
       possede,
       platforms,
-      rating: rating === "" ? null : Number(rating),
+      rating,
       comment,
     });
     setSubmitting(false);
@@ -84,18 +85,10 @@ export default function AjouterSheet({ game, onClose, onAdded }) {
 
         {possede && (
           <>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted">Note (optionnelle, sur 10)</span>
-              <input
-                className="field"
-                type="number"
-                min="0"
-                max="10"
-                step="1"
-                value={rating}
-                onChange={(e) => setRating(e.target.value)}
-              />
-            </label>
+            <div className="flex flex-col gap-1 text-sm">
+              <span className="text-muted">Note (optionnelle)</span>
+              <RatingSelector value={rating} onChange={setRating} />
+            </div>
 
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-muted">Commentaire (optionnel)</span>

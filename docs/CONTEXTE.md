@@ -84,9 +84,12 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   plateforme(s) de complétion (**plusieurs possibles**, pastilles à cocher comme les plateformes
   possédées, **présélectionnée automatiquement si une seule plateforme est possédée** au moment
   où le jeu passe à « Terminé », sans revenir si l'utilisateur la décoche ensuite) + compteur
-  « Terminé ×N » + bouton **Recommencer** (si terminé), note/commentaire (si possédé, jamais
-  effacés si on décoche possession — juste masqués), retrait avec confirmation. Bloc « Dossiers »
-  (visible seulement si le jeu est dans la Bibliothèque) juste en dessous.
+  « Terminé ×N » + bouton **Recommencer** (si terminé), note **sur 10 via un sélecteur de 10
+  pastilles cliquables** (composant `RatingSelector` partagé avec la Sheet d'ajout, bouton
+  « Effacer » si une note est posée) + commentaire (si possédé, quel que soit le statut — à
+  faire/en cours/terminé —, jamais effacés si on décoche possession — juste masqués), retrait
+  avec confirmation. Bloc « Dossiers » (visible seulement si le jeu est dans la Bibliothèque)
+  juste en dessous.
 - **Profil** : donut + 4 tuiles de statistiques calculées localement (jeux terminés, plateforme
   et genre les plus fréquents — la plateforme utilise en priorité celles cochées comme
   possédées, note moyenne — « — » si rien à calculer plutôt qu'un NaN), réglage d'apparence
@@ -848,3 +851,29 @@ direct vers Bibliothèque).
 - **Hors scope assumé** (voir cahier des charges) : états de confirmation inline (retrait d'un jeu,
   mode « genre » dans Découvrir) non interceptés par retour ; toast affiché uniquement dans l'écran
   principal, pas pendant l'Onboarding (pas de barre de navigation à cet endroit).
+
+### Livraison 27 — Sélecteur de note 1-10 (2026-08-05)
+Retouche sans nouveau cahier des charges (composant contenu, réutilisé à l'identique aux deux
+seuls endroits où une note existait déjà) suite à un retour utilisateur : remplacer le champ
+numérique libre par un vrai sélecteur 1-10, maquette autonome validée avant code
+([mockups/selecteur-note-1-10.html](../mockups/selecteur-note-1-10.html)). Vérification préalable
+que la note était déjà proposée pour tous les statuts (à faire/en cours/terminé) dès que le jeu
+est possédé, pas seulement pour "terminé" comme la demande initiale le laissait supposer — aucune
+restriction à lever de ce côté, seul le design du champ changeait.
+- Nouveau composant `src/components/RatingSelector.jsx` (10 pastilles cliquables 1-10 + bouton
+  « Effacer », `value`/`onChange` — nombre 1-10 ou `null`), nouvelles classes CSS
+  `.rating-row`/`.rating-grid`/`.rating-btn`/`.rating-clear`/`.rating-value` (`globals.css`).
+  Utilisé dans `src/screens/FicheJeu.jsx` (remplace le state `ratingInput` devenu inutile, la note
+  vient directement de `entry.rating`) et `src/components/AjouterSheet.jsx` (state `rating`
+  passe de `string` à `number | null`, plus de conversion manuelle à la soumission).
+- Vérifié en conditions réelles (`npm run dev`, données de test créées puis entièrement retirées
+  après coup) : sélecteur affiché et fonctionnel sur un jeu au statut "À faire" (note posée,
+  pastilles jusqu'à la note "couvertes", persistance confirmée après rechargement complet de la
+  page) et sur "Terminé" (sélecteur identique, cohabite avec plateforme(s) de complétion et
+  bouton Recommencer) ; bouton "Effacer" testé (retour à "Pas encore noté"). `npm test` → 79/79
+  (aucune logique pure touchée).
+- **Non vérifié en conditions réelles** : le sélecteur dans `AjouterSheet.jsx` (Sheet d'ajout
+  depuis un résultat Découvrir) — nécessite le proxy IGDB (`vercel dev`, second terminal) non
+  lancé pendant cette vérification. Le composant y est strictement identique (même
+  `RatingSelector`, même câblage `value`/`onChange`) à celui vérifié en direct dans la Fiche jeu ;
+  à confirmer par l'utilisateur au prochain ajout d'un jeu depuis Découvrir.

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maquette — Sélecteur de note 1 à 10</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --foreground: #f4f6ff;
+    --muted: rgba(244, 246, 255, 0.6);
+    --faint: rgba(244, 246, 255, 0.4);
+    --bg-base: #060512;
+    --bg-blob-1: rgba(255, 62, 200, 0.38);
+    --bg-blob-2: rgba(52, 224, 255, 0.28);
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-bg-strong: rgba(255, 255, 255, 0.09);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-shadow: rgba(0, 0, 0, 0.4);
+    --accent: #ff3ec8;
+    --accent-ink: #2a0018;
+    --accent-2: #34e0ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg-base);
+    color: var(--foreground);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: -20%;
+    background:
+      radial-gradient(circle at 20% 15%, var(--bg-blob-1), transparent 45%),
+      radial-gradient(circle at 85% 75%, var(--bg-blob-2), transparent 45%);
+    filter: blur(60px);
+    z-index: -1;
+  }
+  .frame { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 1.25rem; }
+  h1 { font-size: 0.95rem; font-weight: 700; color: var(--muted); margin: 0 0 0.25rem; }
+  .note { font-size: 0.78rem; color: var(--faint); margin: 0 0 0.5rem; line-height: 1.4; }
+
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid var(--glass-border);
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 30px -10px var(--glass-shadow);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--faint); }
+  .field-label { font-size: 0.85rem; color: var(--muted); display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .rating-row { display: flex; align-items: center; gap: 0.6rem; }
+  .rating-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 0.35rem;
+    flex: 1;
+  }
+  .rating-btn {
+    appearance: none;
+    border: 1.5px solid var(--glass-border);
+    background: var(--glass-bg);
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    border-radius: 0.6rem;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+  }
+  .rating-btn:active { transform: scale(0.93); }
+  .rating-btn[data-active="true"] {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: transparent;
+    box-shadow: 0 0 14px -2px color-mix(in srgb, var(--accent) 80%, transparent);
+  }
+  /* survolés/couverts jusqu'à la note choisie : renforce la lecture "barème" plutôt que "case isolée" */
+  .rating-btn[data-covered="true"]:not([data-active="true"]) {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--glass-border));
+    color: var(--foreground);
+  }
+
+  .rating-clear {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--faint);
+    background: none;
+    border: none;
+    padding: 0.3rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .rating-clear:active { color: var(--accent); }
+
+  .rating-value {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--muted);
+    min-height: 1.1em;
+  }
+  .rating-value strong { color: var(--accent); font-size: 0.95rem; }
+
+  .variant-title { font-size: 0.72rem; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: 0.04em; margin: 0.25rem 0 0; }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <div>
+      <h1>Sélecteur de note — 1 à 10</h1>
+      <p class="note">
+        Remplace le champ numérique libre actuel par 10 pastilles cliquables, réutilisées à
+        l'identique dans la Fiche jeu et la Sheet d'ajout, pour tous les statuts (à faire, en
+        cours, terminé) dès que le jeu est possédé — inchangé sur ce point.
+      </p>
+    </div>
+
+    <!-- Variante A : note posée à 7, pastilles "couvertes" jusqu'à la note pour lire un barème -->
+    <p class="variant-title">Variante A — note posée (7/10)</p>
+    <div class="glass">
+      <span class="label">Mon suivi</span>
+      <label class="field-label">
+        <span>Note</span>
+        <div class="rating-row">
+          <div class="rating-grid" id="gridA"></div>
+          <button type="button" class="rating-clear" id="clearA">Effacer</button>
+        </div>
+        <span class="rating-value" id="valueA"></span>
+      </label>
+    </div>
+
+    <!-- Variante B : aucune note posée -->
+    <p class="variant-title">Variante B — aucune note posée</p>
+    <div class="glass">
+      <span class="label">Mon suivi</span>
+      <label class="field-label">
+        <span>Note</span>
+        <div class="rating-row">
+          <div class="rating-grid" id="gridB"></div>
+        </div>
+        <span class="rating-value" id="valueB">Pas encore noté</span>
+      </label>
+    </div>
+  </div>
+
+  <script>
+    function buildGrid(gridEl, valueEl, clearEl, initial) {
+      let current = initial;
+      function render() {
+        gridEl.innerHTML = "";
+        for (let i = 1; i <= 10; i++) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "rating-btn";
+          btn.textContent = i;
+          btn.dataset.active = String(i === current);
+          btn.dataset.covered = String(current != null && i <= current);
+          btn.addEventListener("click", () => {
+            current = i;
+            render();
+          });
+          gridEl.appendChild(btn);
+        }
+        valueEl.innerHTML = current != null ? `<strong>${current}</strong> / 10` : (valueEl.dataset.empty || "");
+      }
+      if (clearEl) {
+        clearEl.addEventListener("click", () => { current = null; render(); });
+      }
+      valueEl.dataset.empty = valueEl.textContent;
+      render();
+    }
+    buildGrid(document.getElementById("gridA"), document.getElementById("valueA"), document.getElementById("clearA"), 7);
+    buildGrid(document.getElementById("gridB"), document.getElementById("valueB"), null, null);
+  </script>
+</body>
+</html>

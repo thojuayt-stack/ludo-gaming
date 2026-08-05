@@ -11,6 +11,7 @@ import AjouterSheet from "../components/AjouterSheet.jsx";
 import AjouterDossierSheet from "../components/AjouterDossierSheet.jsx";
 import StatusFilterBar, { STATUS_ICONS } from "../components/StatusFilterBar.jsx";
 import Toggle from "../components/Toggle.jsx";
+import RatingSelector from "../components/RatingSelector.jsx";
 import { ControllerIcon, XIcon } from "../components/icons.jsx";
 
 const SUMMARY_COLLAPSE_THRESHOLD = 220;
@@ -18,7 +19,6 @@ const SUMMARY_COLLAPSE_THRESHOLD = 220;
 export default function FicheJeu({ igdbId, onBack }) {
   const [game, setGame] = useState(null);
   const [entry, setEntry] = useState(null); // LibraryEntry | null
-  const [ratingInput, setRatingInput] = useState("");
   const [commentInput, setCommentInput] = useState("");
   const [confirmingRemove, setConfirmingRemove] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -36,7 +36,6 @@ export default function FicheJeu({ igdbId, onBack }) {
       setGame(g);
       setEntry(e);
       setFolders(f);
-      setRatingInput(e?.rating ?? "");
       setCommentInput(e?.comment ?? "");
     } catch (err) {
       setLoadError(err.message || "Impossible de charger cette fiche.");
@@ -50,7 +49,6 @@ export default function FicheJeu({ igdbId, onBack }) {
   async function handlePossedeChange(possede) {
     const updated = await updateLibraryEntry(igdbId, { possede });
     setEntry(updated);
-    setRatingInput(updated.rating ?? "");
     setCommentInput(updated.comment ?? "");
   }
 
@@ -78,8 +76,7 @@ export default function FicheJeu({ igdbId, onBack }) {
     setEntry(updated);
   }
 
-  async function commitRating(rawValue) {
-    const rating = rawValue === "" ? null : Math.min(10, Math.max(0, Number(rawValue)));
+  async function commitRating(rating) {
     const updated = await updateLibraryEntry(igdbId, { rating });
     setEntry(updated);
   }
@@ -257,18 +254,10 @@ export default function FicheJeu({ igdbId, onBack }) {
 
             {entry.possede && (
               <>
-                <label className="flex flex-col gap-1 text-sm">
-                  <span className="text-muted">Note (sur 10)</span>
-                  <input
-                    className="field"
-                    type="number"
-                    min="0"
-                    max="10"
-                    value={ratingInput}
-                    onChange={(e) => setRatingInput(e.target.value)}
-                    onBlur={(e) => commitRating(e.target.value)}
-                  />
-                </label>
+                <div className="flex flex-col gap-1 text-sm">
+                  <span className="text-muted">Note</span>
+                  <RatingSelector value={entry.rating ?? null} onChange={commitRating} />
+                </div>
 
                 <label className="flex flex-col gap-1 text-sm">
                   <span className="text-muted">Commentaire</span>
@@ -340,7 +329,6 @@ export default function FicheJeu({ igdbId, onBack }) {
           onClose={() => setShowAddSheet(false)}
           onAdded={(newEntry) => {
             setEntry(newEntry);
-            setRatingInput(newEntry.rating ?? "");
             setCommentInput(newEntry.comment ?? "");
             setShowAddSheet(false);
           }}
