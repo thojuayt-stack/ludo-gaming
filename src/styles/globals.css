@@ -453,8 +453,7 @@ button.chip[data-active="true"] {
  * numérique libre. Les pastilles jusqu'à la note choisie ("couvertes") se colorent légèrement
  * pour se lire comme un barème plutôt que comme une case isolée.
  */
-.rating-row { display: flex; align-items: center; gap: 0.6rem; }
-.rating-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 0.35rem; flex: 1; }
+.rating-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 0.35rem; }
 .rating-btn {
   font-size: 0.78rem;
   font-weight: 700;
@@ -476,8 +475,6 @@ button.chip[data-active="true"] {
   border-color: color-mix(in srgb, var(--accent) 45%, var(--glass-border));
   color: var(--foreground);
 }
-.rating-clear { font-size: 0.72rem; font-weight: 700; color: var(--faint); background: none; border: none; padding: 0.3rem; white-space: nowrap; }
-.rating-clear:active { color: var(--accent); }
 .rating-value { font-size: 0.78rem; font-weight: 700; color: var(--muted); min-height: 1.1em; }
 .rating-value strong { color: var(--accent); font-size: 0.95rem; }
 

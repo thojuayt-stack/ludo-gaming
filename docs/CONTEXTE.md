@@ -85,10 +85,11 @@ charges dans ce dossier). **Il n'existe plus de wishlist séparée** — un seul
   possédées, **présélectionnée automatiquement si une seule plateforme est possédée** au moment
   où le jeu passe à « Terminé », sans revenir si l'utilisateur la décoche ensuite) + compteur
   « Terminé ×N » + bouton **Recommencer** (si terminé), note **sur 10 via un sélecteur de 10
-  pastilles cliquables** (composant `RatingSelector` partagé avec la Sheet d'ajout, bouton
-  « Effacer » si une note est posée) + commentaire (si possédé, quel que soit le statut — à
-  faire/en cours/terminé —, jamais effacés si on décoche possession — juste masqués), retrait
-  avec confirmation. Bloc « Dossiers » (visible seulement si le jeu est dans la Bibliothèque)
+  pastilles cliquables** (composant `RatingSelector` partagé avec la Sheet d'ajout ; recliquer sur
+  la note déjà active l'efface, pas de bouton "Effacer" séparé) + commentaire (si possédé, quel
+  que soit le statut — à faire/en cours/terminé —, jamais effacés si on décoche possession — juste
+  masqués), retrait avec confirmation. Bloc « Dossiers » (visible seulement si le jeu est dans la
+  Bibliothèque)
   juste en dessous.
 - **Profil** : donut + 4 tuiles de statistiques calculées localement (jeux terminés, plateforme
   et genre les plus fréquents — la plateforme utilise en priorité celles cochées comme
@@ -872,8 +873,21 @@ restriction à lever de ce côté, seul le design du champ changeait.
   page) et sur "Terminé" (sélecteur identique, cohabite avec plateforme(s) de complétion et
   bouton Recommencer) ; bouton "Effacer" testé (retour à "Pas encore noté"). `npm test` → 79/79
   (aucune logique pure touchée).
-- **Non vérifié en conditions réelles** : le sélecteur dans `AjouterSheet.jsx` (Sheet d'ajout
-  depuis un résultat Découvrir) — nécessite le proxy IGDB (`vercel dev`, second terminal) non
-  lancé pendant cette vérification. Le composant y est strictement identique (même
-  `RatingSelector`, même câblage `value`/`onChange`) à celui vérifié en direct dans la Fiche jeu ;
-  à confirmer par l'utilisateur au prochain ajout d'un jeu depuis Découvrir.
+- Déployé en production (`vercel --prod`) sur [ludotheque-five.vercel.app](https://ludotheque-five.vercel.app)
+  après commit + push sur `origin/main`. Le sélecteur dans `AjouterSheet.jsx` (non testé en direct
+  pendant le développement faute de `vercel dev` lancé) a ensuite été confirmé par l'utilisateur
+  sur le site en production (capture d'écran, jeu "Grand Theft Auto V" en statut "À faire").
+
+### Livraison 28 — Sélecteur de note : retrait du bouton "Effacer" (2026-08-05)
+Retouche sans nouveau cahier des charges (ajustement mineur du composant livré à la Livraison 27,
+suite à un retour utilisateur sur une capture de la Sheet d'ajout en production) :
+- **Retour utilisateur** : le bouton "Effacer" à côté du sélecteur est superflu — recliquer sur la
+  note déjà active doit l'effacer, pas besoin d'un bouton séparé.
+- `src/components/RatingSelector.jsx` : bouton "Effacer" supprimé, `onClick` de chaque pastille
+  passe `null` si elle est déjà la valeur active (`value === n ? null : n`) au lieu de toujours
+  passer `n`. Classe CSS `.rating-clear` (devenue inutile) retirée de `globals.css`, `.rating-row`
+  simplifiée (n'enveloppait plus que la grille).
+- Vérifié en conditions réelles (`npm run dev`, donnée de test créée puis retirée) : note
+  pré-remplie à 5, clic sur la pastille "5" (déjà active) → repasse à "Pas encore noté", plus de
+  bouton "Effacer" affiché. `npm test` → 79/79, `npm run build` propre.
+- Déployé en production (`vercel --prod`) après commit + push.
